@@ -4,6 +4,8 @@ A Model Context Protocol server that provides read and write access to Airtable 
 
 https://github.com/user-attachments/assets/b4b42c1e-857b-4226-b4ff-edafda9de141
 
+<a href="https://glama.ai/mcp/servers/7abwib27hk"><img width="380" height="200" src="https://glama.ai/mcp/servers/7abwib27hk/badge" /></a>
+
 ## Usage
 
 To use this server with the Claude Desktop app, add the following configuration to the "mcpServers" section of your `claude_desktop_config.json`:
