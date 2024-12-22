@@ -460,6 +460,15 @@ export const ListRecordsArgsSchema = z.object({
   baseId: z.string(),
   tableId: z.string(),
   maxRecords: z.number().optional().describe('Maximum number of records to return. Defaults to 100.'),
+  filterByFormula: z.string().optional().describe('Airtable formula to filter records'),
+});
+
+export const SearchRecordsArgsSchema = z.object({
+  baseId: z.string(),
+  tableId: z.string(),
+  searchTerm: z.string().describe('Text to search for in records'),
+  fieldIds: z.array(z.string()).optional().describe('Specific field ids to search in. If not provided, searches all text-based fields.'),
+  maxRecords: z.number().optional().describe('Maximum number of records to return. Defaults to 100.'),
 });
 
 export const ListTablesArgsSchema = z.object({
@@ -537,6 +546,7 @@ export type AirtableRecord = { id: string, fields: FieldSet };
 
 export interface ListRecordsOptions {
   maxRecords?: number | undefined;
+  filterByFormula?: string | undefined;
 }
 
 export interface IAirtableService {
@@ -551,6 +561,7 @@ export interface IAirtableService {
   updateTable(baseId: string, tableId: string, updates: { name?: string | undefined; description?: string | undefined }): Promise<Table>;
   createField(baseId: string, tableId: string, field: Field): Promise<Field & { id: string }>;
   updateField(baseId: string, tableId: string, fieldId: string, updates: { name?: string | undefined; description?: string | undefined }): Promise<Field & { id: string }>;
+  searchRecords(baseId: string, tableId: string, searchTerm: string, fieldIds?: string[], maxRecords?: number): Promise<AirtableRecord[]>;
 }
 
 export interface IAirtableMCPServer {

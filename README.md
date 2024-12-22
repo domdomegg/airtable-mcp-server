@@ -34,7 +34,17 @@ Replace `pat123.abc123` with your [Airtable personal access token](https://airta
   - Input parameters:
     - `baseId` (string, required): The ID of the Airtable base
     - `tableId` (string, required): The ID of the table to query
-    - `maxRecords` (number, optional): Maximum number of records to return
+    - `maxRecords` (number, optional): Maximum number of records to return. Defaults to 100.
+    - `filterByFormula` (string, optional): Airtable formula to filter records
+
+- **search_records**
+  - Search for records containing specific text
+  - Input parameters:
+    - `baseId` (string, required): The ID of the Airtable base
+    - `tableId` (string, required): The ID of the table to query
+    - `searchTerm` (string, required): Text to search for in records
+    - `fieldIds` (array, optional): Specific field IDs to search in. If not provided, searches all text-based fields.
+    - `maxRecords` (number, optional): Maximum number of records to return. Defaults to 100.
 
 - **list_bases**
   - Lists all accessible Airtable bases

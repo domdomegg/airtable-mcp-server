@@ -23,6 +23,7 @@ import {
   UpdateTableArgsSchema,
   CreateFieldArgsSchema,
   UpdateFieldArgsSchema,
+  SearchRecordsArgsSchema,
   IAirtableService,
   IAirtableMCPServer,
 } from './types.js';
@@ -138,6 +139,11 @@ export class AirtableMCPServer implements IAirtableMCPServer {
           inputSchema: getInputSchema(ListRecordsArgsSchema),
         },
         {
+          name: 'search_records',
+          description: 'Search for records containing specific text',
+          inputSchema: getInputSchema(SearchRecordsArgsSchema),
+        },
+        {
           name: 'list_bases',
           description: 'List all accessible Airtable bases',
           inputSchema: {
@@ -203,7 +209,19 @@ export class AirtableMCPServer implements IAirtableMCPServer {
           const records = await this.airtableService.listRecords(
             args.baseId,
             args.tableId,
-            { maxRecords: args.maxRecords },
+            { maxRecords: args.maxRecords, filterByFormula: args.filterByFormula },
+          );
+          return formatToolResponse(records);
+        }
+
+        case 'search_records': {
+          const args = SearchRecordsArgsSchema.parse(request.params.arguments);
+          const records = await this.airtableService.searchRecords(
+            args.baseId,
+            args.tableId,
+            args.searchTerm,
+            args.fieldIds,
+            args.maxRecords,
           );
           return formatToolResponse(records);
         }

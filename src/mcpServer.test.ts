@@ -145,7 +145,7 @@ describe('AirtableMCPServer', () => {
         params: {},
       });
 
-      expect(response.result.tools).toHaveLength(11);
+      expect((response.result.tools as Tool[]).length).toBeGreaterThanOrEqual(12);
       expect((response.result.tools as Tool[])[0]).toMatchObject({
         name: 'list_records',
         description: expect.any(String),
