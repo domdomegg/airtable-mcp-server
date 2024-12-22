@@ -70,12 +70,35 @@ export class AirtableService implements IAirtableService {
   }
 
   async listRecords(baseId: string, tableId: string, options?: ListRecordsOptions): Promise<AirtableRecord[]> {
-    const queryParams = options?.maxRecords ? `?maxRecords=${options.maxRecords}` : '';
-    const response = await this.fetchFromAPI(
-      `/v0/${baseId}/${tableId}${queryParams}`,
-      z.object({ records: z.array(z.object({ id: z.string(), fields: z.record(z.any()) })) }),
-    );
-    return response.records;
+    const maxRecords = options?.maxRecords;
+    let allRecords: AirtableRecord[] = [];
+    let offset: string | undefined;
+
+    do {
+      const queryParams = new URLSearchParams();
+      if (maxRecords) queryParams.append('maxRecords', maxRecords.toString());
+      if (offset) queryParams.append('offset', offset);
+
+      // eslint-disable-next-line no-await-in-loop
+      const response = await this.fetchFromAPI(
+        `/v0/${baseId}/${tableId}?${queryParams.toString()}`,
+        z.object({
+          records: z.array(z.object({ id: z.string(), fields: z.record(z.any()) })),
+          offset: z.string().optional(),
+        }),
+      );
+
+      allRecords = allRecords.concat(response.records);
+      offset = response.offset;
+
+      // Stop if we've reached maxRecords
+      if (maxRecords && allRecords.length >= maxRecords) {
+        allRecords = allRecords.slice(0, maxRecords);
+        break;
+      }
+    } while (offset);
+
+    return allRecords;
   }
 
   async getRecord(baseId: string, tableId: string, recordId: string): Promise<AirtableRecord> {

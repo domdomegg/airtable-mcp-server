@@ -459,7 +459,7 @@ export const BaseSchemaResponseSchema = z.object({
 export const ListRecordsArgsSchema = z.object({
   baseId: z.string(),
   tableId: z.string(),
-  maxRecords: z.number().optional(),
+  maxRecords: z.number().optional().describe('Maximum number of records to return. Defaults to 100.'),
 });
 
 export const ListTablesArgsSchema = z.object({
