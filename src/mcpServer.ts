@@ -163,12 +163,12 @@ export class AirtableMCPServer implements IAirtableMCPServer {
         },
         {
           name: 'update_records',
-          description: 'Update one or more records in a table',
+          description: 'Update up to 10 records in a table',
           inputSchema: getInputSchema(UpdateRecordsArgsSchema),
         },
         {
           name: 'delete_records',
-          description: 'Delete one or more records from a table',
+          description: 'Delete records from a table',
           inputSchema: getInputSchema(DeleteRecordsArgsSchema),
         },
         {

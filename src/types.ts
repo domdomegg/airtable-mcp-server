@@ -434,7 +434,7 @@ export const FieldSchema = z.object({
       type: z.literal('multipleAttachments'),
     }),
   ]),
-);
+).describe('The config of a field. NB: Formula fields cannot be created with this MCP due to a limitation in the Airtable API.');
 
 export const ViewSchema = z.object({
   id: z.string(),
@@ -495,9 +495,11 @@ export const DeleteRecordsArgsSchema = z.object({
 
 export const CreateTableArgsSchema = z.object({
   baseId: z.string(),
-  name: z.string(),
+  name: z.string().describe('Name for the new table. Must be unique in the base.'),
   description: z.string().optional(),
-  fields: z.array(FieldSchema),
+  fields: z.array(FieldSchema).describe(`Table fields. Rules:
+- At least one field must be specified.
+- The primary (first) field must be one of: single line text, long text, date, phone number, email, URL, number, currency, percent, duration, formula, autonumber, barcode.`),
 });
 
 export const UpdateTableArgsSchema = z.object({
