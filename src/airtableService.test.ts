@@ -126,7 +126,7 @@ describe('AirtableService', () => {
         const result = await service.listRecords(mockBaseId, mockTableId);
 
         expect(mockFetch).toHaveBeenCalledWith(
-          `${mockBaseUrl}/v0/${mockBaseId}/${mockTableId}`,
+          `${mockBaseUrl}/v0/${mockBaseId}/${mockTableId}?`,
           expect.any(Object),
         );
         expect(result).toEqual(mockResponse.records);
