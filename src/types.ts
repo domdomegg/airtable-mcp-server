@@ -471,8 +471,27 @@ export const SearchRecordsArgsSchema = z.object({
   maxRecords: z.number().optional().describe('Maximum number of records to return. Defaults to 100.'),
 });
 
+export const TableDetailLevelSchema = z.enum(['tableIdentifiersOnly', 'identifiersOnly', 'full']).describe(`Detail level for table information:
+- tableIdentifiersOnly: table IDs and names
+- identifiersOnly: table, field, and view IDs and names
+- full: complete details including field types, descriptions, and configurations
+
+Note for LLMs: To optimize context window usage, request the minimum detail level needed:
+- Use 'tableIdentifiersOnly' when you only need to list or reference tables
+- Use 'identifiersOnly' when you need to work with field or view references
+- Only use 'full' when you need field types, descriptions, or other detailed configuration
+
+If you only need detailed information on a few tables in a base with many complex tables, it might be more efficient for you to use list_tables with tableIdentifiersOnly, then describe_table with full on the specific tables you want.`);
+
+export const DescribeTableArgsSchema = z.object({
+  baseId: z.string(),
+  tableId: z.string(),
+  detailLevel: TableDetailLevelSchema.optional().default('full'),
+});
+
 export const ListTablesArgsSchema = z.object({
   baseId: z.string(),
+  detailLevel: TableDetailLevelSchema.optional().default('full'),
 });
 
 export const GetRecordArgsSchema = z.object({

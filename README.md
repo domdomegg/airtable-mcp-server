@@ -55,7 +55,17 @@ Replace `pat123.abc123` with your [Airtable personal access token](https://airta
   - Lists all tables in a specific base
   - Input parameters:
     - `baseId` (string, required): The ID of the Airtable base
-  - Returns table ID, name, description, fields, and views
+    - `detailLevel` (string, optional): The amount of detail to get about the tables (`tableIdentifiersOnly`, `identifiersOnly`, or `full`)
+  - Returns table ID, name, description, fields, and views (to the given `detailLevel`)
+
+- **describe_table**
+  - Gets detailed information about a specific table
+  - Input parameters:
+    - `baseId` (string, required): The ID of the Airtable base
+    - `tableId` (string, required): The ID of the table to describe
+    - `detailLevel` (string, optional): The amount of detail to get about the table (`tableIdentifiersOnly`, `identifiersOnly`, or `full`)
+  - Returns the same format as list_tables but for a single table
+  - Useful for getting details about a specific table without fetching information about all tables in the base
 
 - **get_record**
   - Gets a specific record by ID

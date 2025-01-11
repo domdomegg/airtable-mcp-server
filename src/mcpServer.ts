@@ -15,6 +15,7 @@ import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import {
   ListRecordsArgsSchema,
   ListTablesArgsSchema,
+  DescribeTableArgsSchema,
   GetRecordArgsSchema,
   CreateRecordArgsSchema,
   UpdateRecordsArgsSchema,
@@ -158,6 +159,11 @@ export class AirtableMCPServer implements IAirtableMCPServer {
           inputSchema: getInputSchema(ListTablesArgsSchema),
         },
         {
+          name: 'describe_table',
+          description: 'Get detailed information about a specific table',
+          inputSchema: getInputSchema(DescribeTableArgsSchema),
+        },
+        {
           name: 'get_record',
           description: 'Get a specific record by ID',
           inputSchema: getInputSchema(GetRecordArgsSchema),
@@ -238,13 +244,77 @@ export class AirtableMCPServer implements IAirtableMCPServer {
         case 'list_tables': {
           const args = ListTablesArgsSchema.parse(request.params.arguments);
           const schema = await this.airtableService.getBaseSchema(args.baseId);
-          return formatToolResponse(schema.tables.map((table) => ({
-            id: table.id,
-            name: table.name,
-            description: table.description,
-            fields: table.fields,
-            views: table.views,
-          })));
+          return formatToolResponse(schema.tables.map((table) => {
+            switch (args.detailLevel) {
+              case 'tableIdentifiersOnly':
+                return {
+                  id: table.id,
+                  name: table.name,
+                };
+              case 'identifiersOnly':
+                return {
+                  id: table.id,
+                  name: table.name,
+                  fields: table.fields.map((field) => ({
+                    id: field.id,
+                    name: field.name,
+                  })),
+                  views: table.views.map((view) => ({
+                    id: view.id,
+                    name: view.name,
+                  })),
+                };
+              case 'full':
+              default:
+                return {
+                  id: table.id,
+                  name: table.name,
+                  description: table.description,
+                  fields: table.fields,
+                  views: table.views,
+                };
+            }
+          }));
+        }
+
+        case 'describe_table': {
+          const args = DescribeTableArgsSchema.parse(request.params.arguments);
+          const schema = await this.airtableService.getBaseSchema(args.baseId);
+          const table = schema.tables.find((t) => t.id === args.tableId);
+
+          if (!table) {
+            return formatToolResponse(`Table ${args.tableId} not found in base ${args.baseId}`, true);
+          }
+
+          switch (args.detailLevel) {
+            case 'tableIdentifiersOnly':
+              return formatToolResponse({
+                id: table.id,
+                name: table.name,
+              });
+            case 'identifiersOnly':
+              return formatToolResponse({
+                id: table.id,
+                name: table.name,
+                fields: table.fields.map((field) => ({
+                  id: field.id,
+                  name: field.name,
+                })),
+                views: table.views.map((view) => ({
+                  id: view.id,
+                  name: view.name,
+                })),
+              });
+            case 'full':
+            default:
+              return formatToolResponse({
+                id: table.id,
+                name: table.name,
+                description: table.description,
+                fields: table.fields,
+                views: table.views,
+              });
+          }
         }
 
         case 'get_record': {
