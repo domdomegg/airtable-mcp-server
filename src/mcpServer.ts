@@ -215,7 +215,12 @@ export class AirtableMCPServer implements IAirtableMCPServer {
           const records = await this.airtableService.listRecords(
             args.baseId,
             args.tableId,
-            { maxRecords: args.maxRecords, filterByFormula: args.filterByFormula, sort: args.sort },
+            {
+              view: args.view,
+              maxRecords: args.maxRecords,
+              filterByFormula: args.filterByFormula,
+              sort: args.sort,
+            },
           );
           return formatToolResponse(records);
         }
@@ -228,6 +233,7 @@ export class AirtableMCPServer implements IAirtableMCPServer {
             args.searchTerm,
             args.fieldIds,
             args.maxRecords,
+            args.view,
           );
           return formatToolResponse(records);
         }

@@ -470,6 +470,7 @@ export const BaseSchemaResponseSchema = z.object({
 export const ListRecordsArgsSchema = z.object({
   baseId: z.string(),
   tableId: z.string(),
+  view: z.string().optional().describe('View name or ID to use for filtering and sorting records. If provided, the view\'s filters and sorts will be applied.'),
   maxRecords: z.number().optional().describe('Maximum number of records to return. Defaults to 100.'),
   filterByFormula: z.string().optional().describe('Airtable formula to filter records'),
   sort: z.array(z.object({
@@ -481,6 +482,7 @@ export const ListRecordsArgsSchema = z.object({
 export const SearchRecordsArgsSchema = z.object({
   baseId: z.string(),
   tableId: z.string(),
+  view: z.string().optional().describe('View name or ID to use for filtering and sorting records. If provided, the view\'s filters and sorts will be applied.'),
   searchTerm: z.string().describe('Text to search for in records'),
   fieldIds: z.array(z.string()).optional().describe('Specific field ids to search in. If not provided, searches all text-based fields.'),
   maxRecords: z.number().optional().describe('Maximum number of records to return. Defaults to 100.'),
@@ -578,6 +580,7 @@ export type FieldSet = z.infer<typeof FieldSetSchema>;
 export type AirtableRecord = { id: string, fields: FieldSet };
 
 export interface ListRecordsOptions {
+  view?: z.infer<typeof ListRecordsArgsSchema.shape.view>;
   maxRecords?: z.infer<typeof ListRecordsArgsSchema.shape.maxRecords>;
   filterByFormula?: z.infer<typeof ListRecordsArgsSchema.shape.filterByFormula>;
   sort?: z.infer<typeof ListRecordsArgsSchema.shape.sort>;
@@ -595,7 +598,7 @@ export interface IAirtableService {
   updateTable(baseId: string, tableId: string, updates: { name?: string | undefined; description?: string | undefined }): Promise<Table>;
   createField(baseId: string, tableId: string, field: Field): Promise<Field & { id: string }>;
   updateField(baseId: string, tableId: string, fieldId: string, updates: { name?: string | undefined; description?: string | undefined }): Promise<Field & { id: string }>;
-  searchRecords(baseId: string, tableId: string, searchTerm: string, fieldIds?: string[], maxRecords?: number): Promise<AirtableRecord[]>;
+  searchRecords(baseId: string, tableId: string, searchTerm: string, fieldIds?: string[], maxRecords?: number, view?: string): Promise<AirtableRecord[]>;
 }
 
 export interface IAirtableMCPServer {

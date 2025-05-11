@@ -146,6 +146,20 @@ describe('AirtableService', () => {
         );
       });
 
+      test('handles view option', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          text: () => Promise.resolve(JSON.stringify(mockResponse)),
+        });
+
+        await service.listRecords(mockBaseId, mockTableId, { view: 'viw123' });
+
+        expect(mockFetch).toHaveBeenCalledWith(
+          `${mockBaseUrl}/v0/${mockBaseId}/${mockTableId}?view=viw123`,
+          expect.any(Object),
+        );
+      });
+
       test('handles sort option with single field', async () => {
         mockFetch.mockResolvedValueOnce({
           ok: true,
@@ -218,6 +232,69 @@ describe('AirtableService', () => {
         });
 
         await expect(service.listBases()).rejects.toThrow();
+      });
+    });
+
+    describe('searchRecords', () => {
+      const mockBaseId = 'base123';
+      const mockTableId = 'table123';
+      const mockResponse = {
+        records: [
+          { id: 'rec1', fields: { name: 'Test Result' } },
+        ],
+      };
+
+      test('searches records successfully', async () => {
+        // Mock the getBaseSchema call to return fields for validation
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          text: () => Promise.resolve(JSON.stringify({
+            tables: [{
+              id: mockTableId,
+              fields: [{ id: 'fld1', name: 'Name', type: 'singleLineText' }],
+            }],
+          })),
+        });
+
+        // Mock the listRecords call that searchRecords uses internally
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          text: () => Promise.resolve(JSON.stringify(mockResponse)),
+        });
+
+        const result = await service.searchRecords(mockBaseId, mockTableId, 'test');
+
+        // Verify the second call (listRecords) has the correct filter formula
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+        const secondCallUrl = mockFetch.mock.calls[1]?.[0] as string;
+        expect(secondCallUrl).toContain('filterByFormula=');
+        expect(result).toEqual(mockResponse.records);
+      });
+
+      test('handles view parameter', async () => {
+        // Mock the getBaseSchema call to return fields for validation
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          text: () => Promise.resolve(JSON.stringify({
+            tables: [{
+              id: mockTableId,
+              fields: [{ id: 'fld1', name: 'Name', type: 'singleLineText' }],
+            }],
+          })),
+        });
+
+        // Mock the listRecords call that searchRecords uses internally
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          text: () => Promise.resolve(JSON.stringify(mockResponse)),
+        });
+
+        await service.searchRecords(mockBaseId, mockTableId, 'test', undefined, 100, 'viw123');
+
+        // Verify the second call (listRecords) has the view parameter
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+        const secondCallUrl = mockFetch.mock.calls[1]?.[0] as string;
+        expect(secondCallUrl).toContain('view=viw123');
       });
     });
 

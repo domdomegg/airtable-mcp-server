@@ -78,6 +78,7 @@ export class AirtableService implements IAirtableService {
       const queryParams = new URLSearchParams();
       if (options.maxRecords) queryParams.append('maxRecords', options.maxRecords.toString());
       if (options.filterByFormula) queryParams.append('filterByFormula', options.filterByFormula);
+      if (options.view) queryParams.append('view', options.view);
       if (offset) queryParams.append('offset', offset);
 
       // Add sort parameters if provided
@@ -253,6 +254,7 @@ export class AirtableService implements IAirtableService {
     searchTerm: string,
     fieldIds?: string[],
     maxRecords?: number,
+    view?: string,
   ): Promise<AirtableRecord[]> {
     // Validate and get search fields
     const searchFields = await this.validateAndGetSearchFields(baseId, tableId, fieldIds);
@@ -267,6 +269,6 @@ export class AirtableService implements IAirtableService {
         .join(',')
     })`;
 
-    return this.listRecords(baseId, tableId, { maxRecords, filterByFormula });
+    return this.listRecords(baseId, tableId, { maxRecords, filterByFormula, view });
   }
 }
