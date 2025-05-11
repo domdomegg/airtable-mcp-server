@@ -251,7 +251,10 @@ describe('AirtableService', () => {
           text: () => Promise.resolve(JSON.stringify({
             tables: [{
               id: mockTableId,
+              name: 'Test Table',
+              primaryFieldId: 'fld1',
               fields: [{ id: 'fld1', name: 'Name', type: 'singleLineText' }],
+              views: [{ id: 'viw1', name: 'Grid view', type: 'grid' }],
             }],
           })),
         });
@@ -278,7 +281,10 @@ describe('AirtableService', () => {
           text: () => Promise.resolve(JSON.stringify({
             tables: [{
               id: mockTableId,
+              name: 'Test Table',
+              primaryFieldId: 'fld1',
               fields: [{ id: 'fld1', name: 'Name', type: 'singleLineText' }],
+              views: [{ id: 'viw1', name: 'Grid view', type: 'grid' }],
             }],
           })),
         });
