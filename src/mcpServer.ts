@@ -215,7 +215,7 @@ export class AirtableMCPServer implements IAirtableMCPServer {
           const records = await this.airtableService.listRecords(
             args.baseId,
             args.tableId,
-            { maxRecords: args.maxRecords, filterByFormula: args.filterByFormula },
+            { maxRecords: args.maxRecords, filterByFormula: args.filterByFormula, sort: args.sort },
           );
           return formatToolResponse(records);
         }

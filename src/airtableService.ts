@@ -79,6 +79,16 @@ export class AirtableService implements IAirtableService {
       if (options.filterByFormula) queryParams.append('filterByFormula', options.filterByFormula);
       if (offset) queryParams.append('offset', offset);
 
+      // Add sort parameters if provided
+      if (options.sort && options.sort.length > 0) {
+        options.sort.forEach((sortOption, index) => {
+          queryParams.append(`sort[${index}][field]`, sortOption.field);
+          if (sortOption.direction) {
+            queryParams.append(`sort[${index}][direction]`, sortOption.direction);
+          }
+        });
+      }
+
       // eslint-disable-next-line no-await-in-loop
       const response = await this.fetchFromAPI(
         `/v0/${baseId}/${tableId}?${queryParams.toString()}`,

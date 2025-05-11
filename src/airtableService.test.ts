@@ -1,5 +1,5 @@
 import {
-  describe, test, expect, vi, beforeEach, MockedFunction,
+  describe, test, expect, vi, beforeEach, MockedFunction, ArgumentsType,
 } from 'vitest';
 import nodeFetch, { Response } from 'node-fetch';
 import { AirtableService } from './airtableService.js';
@@ -8,7 +8,7 @@ describe('AirtableService', () => {
   const mockApiKey = 'test-api-key';
   const mockBaseUrl = 'https://api.airtable.com';
   let service: AirtableService;
-  let mockFetch: MockedFunction<() => Promise<Partial<Response>>>;
+  let mockFetch: MockedFunction<(...args: ArgumentsType<typeof nodeFetch>) => Promise<Partial<Response>>>;
 
   beforeEach(() => {
     // Create a mock fetch function that we'll inject
@@ -144,6 +144,49 @@ describe('AirtableService', () => {
           `${mockBaseUrl}/v0/${mockBaseId}/${mockTableId}?maxRecords=100`,
           expect.any(Object),
         );
+      });
+
+      test('handles sort option with single field', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          text: () => Promise.resolve(JSON.stringify(mockResponse)),
+        });
+
+        await service.listRecords(mockBaseId, mockTableId, {
+          sort: [{ field: 'Name' }],
+        });
+
+        expect(mockFetch).toHaveBeenCalledWith(
+          `${mockBaseUrl}/v0/${mockBaseId}/${mockTableId}?sort%5B0%5D%5Bfield%5D=Name`,
+          expect.any(Object),
+        );
+      });
+
+      test('handles sort option with multiple fields and directions', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          text: () => Promise.resolve(JSON.stringify(mockResponse)),
+        });
+
+        await service.listRecords(mockBaseId, mockTableId, {
+          sort: [
+            { field: 'Name', direction: 'asc' },
+            { field: 'CreatedTime', direction: 'desc' },
+          ],
+        });
+
+        expect(mockFetch).toHaveBeenCalledWith(
+          expect.stringContaining(`${mockBaseUrl}/v0/${mockBaseId}/${mockTableId}?`),
+          expect.any(Object),
+        );
+
+        // Check the URL contains all the sort parameters
+        const url = mockFetch.mock.calls[0]?.[0];
+        expect(typeof url).toBe('string');
+        expect(url).toContain('sort%5B0%5D%5Bfield%5D=Name');
+        expect(url).toContain('sort%5B0%5D%5Bdirection%5D=asc');
+        expect(url).toContain('sort%5B1%5D%5Bfield%5D=CreatedTime');
+        expect(url).toContain('sort%5B1%5D%5Bdirection%5D=desc');
       });
     });
 

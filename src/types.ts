@@ -461,6 +461,10 @@ export const ListRecordsArgsSchema = z.object({
   tableId: z.string(),
   maxRecords: z.number().optional().describe('Maximum number of records to return. Defaults to 100.'),
   filterByFormula: z.string().optional().describe('Airtable formula to filter records'),
+  sort: z.array(z.object({
+    field: z.string().describe('Field name to sort by'),
+    direction: z.enum(['asc', 'desc']).optional().describe('Sort direction. Defaults to asc (ascending)'),
+  })).optional().describe('Specifies how to sort the records'),
 });
 
 export const SearchRecordsArgsSchema = z.object({
@@ -564,8 +568,9 @@ export type FieldSet = Record<string, any>;
 export type AirtableRecord = { id: string, fields: FieldSet };
 
 export interface ListRecordsOptions {
-  maxRecords?: number | undefined;
-  filterByFormula?: string | undefined;
+  maxRecords?: z.infer<typeof ListRecordsArgsSchema.shape.maxRecords>;
+  filterByFormula?: z.infer<typeof ListRecordsArgsSchema.shape.filterByFormula>;
+  sort?: z.infer<typeof ListRecordsArgsSchema.shape.sort>;
 }
 
 export interface IAirtableService {
