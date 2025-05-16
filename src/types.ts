@@ -436,17 +436,6 @@ export const FieldSchema = z.object({
   ]),
 ).describe('The config of a field. NB: Formula fields cannot be created with this MCP due to a limitation in the Airtable API.');
 
-export const FieldSetSchema = z.record(z.union([
-  z.string(),
-  z.number(),
-  z.boolean(),
-  z.array(z.string()),
-  z.null(),
-  z.object({ specialValue: z.string() }),
-  z.object({ error: z.string() }),
-  z.array(z.object({ error: z.string() })),
-]));
-
 export const ViewSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -576,7 +565,8 @@ export type BaseSchemaResponse = z.infer<typeof BaseSchemaResponseSchema>;
 export type Base = z.infer<typeof BaseSchema>;
 export type Table = z.infer<typeof TableSchema>;
 export type Field = z.infer<typeof FieldSchema>;
-export type FieldSet = z.infer<typeof FieldSetSchema>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type FieldSet = Record<string, any>;
 export type AirtableRecord = { id: string, fields: FieldSet };
 
 export interface ListRecordsOptions {

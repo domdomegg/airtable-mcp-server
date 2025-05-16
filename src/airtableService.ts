@@ -13,7 +13,6 @@ import {
   TableSchema,
   FieldSchema,
   FieldSet,
-  FieldSetSchema,
 } from './types.js';
 
 export class AirtableService implements IAirtableService {
@@ -95,7 +94,7 @@ export class AirtableService implements IAirtableService {
       const response = await this.fetchFromAPI(
         `/v0/${baseId}/${tableId}?${queryParams.toString()}`,
         z.object({
-          records: z.array(z.object({ id: z.string(), fields: FieldSetSchema })),
+          records: z.array(z.object({ id: z.string(), fields: z.record(z.any()) })),
           offset: z.string().optional(),
         }),
       );
@@ -110,14 +109,14 @@ export class AirtableService implements IAirtableService {
   async getRecord(baseId: string, tableId: string, recordId: string): Promise<AirtableRecord> {
     return this.fetchFromAPI(
       `/v0/${baseId}/${tableId}/${recordId}`,
-      z.object({ id: z.string(), fields: FieldSetSchema }),
+      z.object({ id: z.string(), fields: z.record(z.any()) }),
     );
   }
 
   async createRecord(baseId: string, tableId: string, fields: FieldSet): Promise<AirtableRecord> {
     return this.fetchFromAPI(
       `/v0/${baseId}/${tableId}`,
-      z.object({ id: z.string(), fields: FieldSetSchema }),
+      z.object({ id: z.string(), fields: z.record(z.any()) }),
       {
         method: 'POST',
         body: JSON.stringify({ fields }),
@@ -132,7 +131,7 @@ export class AirtableService implements IAirtableService {
   ): Promise<AirtableRecord[]> {
     const response = await this.fetchFromAPI(
       `/v0/${baseId}/${tableId}`,
-      z.object({ records: z.array(z.object({ id: z.string(), fields: FieldSetSchema })) }),
+      z.object({ records: z.array(z.object({ id: z.string(), fields: z.record(z.any()) })) }),
       {
         method: 'PATCH',
         body: JSON.stringify({ records }),
