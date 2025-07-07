@@ -26,7 +26,6 @@ WORKDIR /app
 # Copy the build files from the previous stage
 COPY --from=builder /app/dist /app/dist
 COPY --from=builder /app/package.json /app/package-lock.json 
-COPY --from=builder /app/node_modules /app/node_modules
-
+RUN npm install
 # Set the entry point to run the server
 ENTRYPOINT ["node", "dist/index.js"]
