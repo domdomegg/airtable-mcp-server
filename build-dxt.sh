@@ -4,6 +4,10 @@ set -euo pipefail
 
 # Build the project first
 echo "Building project..."
+
+# Remove devDependencies
+rm -rf node_modules
+npm ci --production
 npm run build
 
 # Update manifest.json with version from package.json
@@ -30,6 +34,9 @@ zip --recurse-paths --no-dir-entries \
 echo "Restoring manifest template..."
 sed "s/$VERSION/{{VERSION}}/g" manifest.json > manifest.json.tmp
 mv manifest.json.tmp manifest.json
+
+# Restore full node_modules
+npm ci
 
 echo
 echo "DXT package created: airtable-mcp-server.dxt"
