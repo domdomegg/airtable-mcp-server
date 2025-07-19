@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/domdomegg-airtable-mcp-server-badge.png)](https://mseep.ai/app/domdomegg-airtable-mcp-server)
+
 # airtable-mcp-server
 
 [![smithery badge](https://smithery.ai/badge/airtable-mcp-server)](https://smithery.ai/server/airtable-mcp-server)
