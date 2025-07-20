@@ -1,14 +1,47 @@
 # airtable-mcp-server
 
-[![smithery badge](https://smithery.ai/badge/airtable-mcp-server)](https://smithery.ai/server/airtable-mcp-server)
-
 A Model Context Protocol server that provides read and write access to Airtable databases. This server enables LLMs to inspect database schemas, then read and write records.
 
 https://github.com/user-attachments/assets/c8285e76-d0ed-4018-94c7-20535db6c944
 
-## Usage
+## Installation
 
-To use this server with the Claude Desktop app, add the following configuration to the "mcpServers" section of your `claude_desktop_config.json`:
+**Step 1**: [Create an Airtable personal access token by clicking here](https://airtable.com/create/tokens/new). Details:
+- Name: Anything you want e.g. 'Airtable MCP Server Token'.
+- Scopes: `schema.bases:read`, `data.records:read`, and optionally `schema.bases:write` and `data.records:write`.
+- Access: The bases you want to access. If you're not sure, select 'Add all resources'.
+
+Keep the token handy, you'll need it in the next step. It should look something like `pat123.abc123` (but longer).
+
+**Step 2**: Follow the instructions below for your preferred client:
+
+- [Claude Desktop](#claude-desktop)
+- [Cursor](#cursor)
+- [Cline](#cline)
+- [VS Code](#vs-code)
+
+### Claude Desktop
+
+#### (Recommended) Via the extensions browser
+
+1. Open Claude Desktop and go to Settings → Extensions
+2. Click 'Browse Extensions' and find 'Airtable MCP Server'
+3. Click 'Install' and paste in your API key
+
+#### (Advanced) Alternative: Via manual .dxt installation
+
+1. Find the latest dxt build in [the GitHub Actions history](https://github.com/domdomegg/airtable-mcp-server/actions/workflows/dxt.yaml?query=branch%3Amaster) (the top one)
+2. In the 'Artifacts' section, download the `airtable-mcp-server-dxt` file
+3. Rename the `.zip` file to `.dxt`
+4. Double-click the `.dxt` file to open with Claude Desktop
+5. Click "Install" and configure with your API key
+
+#### (Advanced) Alternative: Via JSON configuration
+
+1. Install [Node.js](https://nodejs.org/en/download)
+2. Open Claude Desktop and go to Settings → Developer
+3. Click "Edit Config" to open your `claude_desktop_config.json` file
+4. Add the following configuration to the "mcpServers" section, replacing `pat123.abc123` with your API key:
 
 ```json
 {
@@ -20,6 +53,33 @@ To use this server with the Claude Desktop app, add the following configuration 
         "airtable-mcp-server"
       ],
       "env": {
+        "AIRTABLE_API_KEY": "pat123.abc123",
+      }
+    }
+  }
+}
+```
+
+4. Save the file and restart Claude Desktop
+
+### Cursor
+
+#### (Recommended) Via one-click install
+
+1. Click [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=airtable&config=JTdCJTIyY29tbWFuZCUyMiUzQSUyMm5weCUyMC15JTIwYWlydGFibGUtbWNwLXNlcnZlciUyMiUyQyUyMmVudiUyMiUzQSU3QiUyMkFJUlRBQkxFX0FQSV9LRVklMjIlM0ElMjJwYXQxMjMuYWJjMTIzJTIyJTdEJTdE)
+2. Edit your `mcp.json` file to insert your API key
+
+#### (Advanced) Alternative: Via JSON configuration
+
+Create either a global (`~/.cursor/mcp.json`) or project-specific (`.cursor/mcp.json`) configuration file, replacing `pat123.abc123` with your API key:
+
+```json
+{
+  "mcpServers": {
+    "airtable": {
+      "command": "npx",
+      "args": ["-y", "airtable-mcp-server"],
+      "env": {
         "AIRTABLE_API_KEY": "pat123.abc123"
       }
     }
@@ -27,7 +87,34 @@ To use this server with the Claude Desktop app, add the following configuration 
 }
 ```
 
-Replace `pat123.abc123` with your [Airtable personal access token](https://airtable.com/create/tokens). Your token should have at least `schema.bases:read` and `data.records:read`, and optionally the corresponding write permissions.
+### Cline
+
+#### (Recommended) Via marketplace
+
+1. Click the "MCP Servers" icon in the Cline extension
+2. Search for "Airtable" and click "Install"
+3. Follow the prompts to install the server
+
+#### (Advanced) Alternative: Via JSON configuration
+
+1. Click the "MCP Servers" icon in the Cline extension
+2. Click on the "Installed" tab, then the "Configure MCP Servers" button at the bottom
+3. Add the following configuration to the "mcpServers" section, replacing `pat123.abc123` with your API key:
+
+```json
+{
+  "mcpServers": {
+    "airtable": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "airtable-mcp-server"],
+      "env": {
+        "AIRTABLE_API_KEY": "pat123.abc123"
+      }
+    }
+  }
+}
+```
 
 ## Components
 

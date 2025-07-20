@@ -1,4 +1,4 @@
-# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+# Smithery configuration file: https://smithery.ai/docs/build/project-config/smithery-yaml
 
 startCommand:
   type: stdio
