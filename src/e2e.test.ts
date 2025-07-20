@@ -31,7 +31,6 @@ interface MCPClient {
  */
 function createProcessBasedClient(
   serverProcess: ReturnType<typeof spawn>,
-  timeoutMs: number,
   cleanup?: () => void,
 ): MCPClient {
   let requestId = 1;
@@ -81,7 +80,7 @@ function createProcessBasedClient(
           pendingRequests.delete(id);
           reject(new Error('Request timeout'));
         }
-      }, timeoutMs);
+      }, 10_000);
     });
   };
 
@@ -156,7 +155,6 @@ describe.each([
 
       return createProcessBasedClient(
         serverProcess,
-        10000, // 10 second timeout
         () => {
           // Clean up test directory
           if (fs.existsSync(testDir)) {
@@ -184,7 +182,6 @@ describe.each([
 
       return createProcessBasedClient(
         serverProcess,
-        15000, // 15 second timeout (Docker might be slower)
       );
     },
   },
@@ -194,7 +191,7 @@ describe.each([
 
     beforeEach(async () => {
       client = await createClient();
-    });
+    }, 60_000);
 
     afterEach(async () => {
       if (client) {

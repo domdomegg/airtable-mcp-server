@@ -2,12 +2,13 @@ name: Build DXT Extension
 
 on: 
   push:
+    branches: [ master ]
   pull_request:
   release:
     types: [ published ]
 
 jobs:
-  build-dxt:
+  dxt:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:

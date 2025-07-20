@@ -2,10 +2,11 @@ name: Docker Build
 
 on:
   push:
+    branches: [ master ]
   pull_request:
 
 jobs:
-  docker-build:
+  docker:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
