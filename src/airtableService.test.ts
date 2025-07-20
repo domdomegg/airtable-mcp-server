@@ -215,6 +215,40 @@ describe('AirtableService', () => {
         await expect(service.listBases()).rejects.toThrow('Airtable API Error');
       });
 
+      test('enhances AUTHENTICATION_REQUIRED errors', async () => {
+        const errorResponse = JSON.stringify({
+          error: {
+            type: 'AUTHENTICATION_REQUIRED',
+            message: 'Authentication required',
+          },
+        });
+
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          statusText: 'Unauthorized',
+          text: () => Promise.resolve(errorResponse),
+        });
+
+        await expect(service.listBases()).rejects.toThrow(/Verify that the token hasn't expired or been revoked./);
+      });
+
+      test('enhances INVALID_PERMISSIONS_OR_MODEL_NOT_FOUND errors', async () => {
+        const errorResponse = JSON.stringify({
+          error: {
+            type: 'INVALID_PERMISSIONS_OR_MODEL_NOT_FOUND',
+            message: 'Invalid permissions or model not found',
+          },
+        });
+
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          statusText: 'Forbidden',
+          text: () => Promise.resolve(errorResponse),
+        });
+
+        await expect(service.listBases()).rejects.toThrow(/schema\.bases:read/);
+      });
+
       test('handles JSON parse errors', async () => {
         mockFetch.mockResolvedValueOnce({
           ok: true,

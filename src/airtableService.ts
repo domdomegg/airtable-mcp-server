@@ -13,6 +13,7 @@ import {
   FieldSchema,
   FieldSet,
 } from './types.js';
+import { enhanceAirtableError } from './enhanceAirtableError.js';
 
 export class AirtableService implements IAirtableService {
   private readonly apiKey: string;
@@ -26,11 +27,11 @@ export class AirtableService implements IAirtableService {
     baseUrl: string = 'https://api.airtable.com',
     fetchFn: typeof fetch = fetch,
   ) {
-    if (!apiKey) {
+    this.apiKey = apiKey.trim();
+    if (!this.apiKey) {
       throw new Error('airtable-mcp-server: No API key provided. Set it in the `AIRTABLE_API_KEY` environment variable');
     }
 
-    this.apiKey = apiKey;
     this.baseUrl = baseUrl;
     this.fetch = fetchFn;
   }
@@ -49,7 +50,9 @@ export class AirtableService implements IAirtableService {
     const responseText = await response.text();
 
     if (!response.ok) {
-      throw new Error(`Airtable API Error: ${response.statusText}. Response: ${responseText}`);
+      const error = new Error(`Airtable API Error: ${response.statusText}. Response: ${responseText}`);
+      enhanceAirtableError(error, responseText, this.apiKey);
+      throw error;
     }
 
     try {
