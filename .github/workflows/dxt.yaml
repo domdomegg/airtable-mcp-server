@@ -10,38 +10,44 @@ jobs:
   build-dxt:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      CI: true
+    strategy:
+      matrix:
+        # 22 because it's built-in to Claude Desktop
+        node-version: [lts/*, current, '22']
     steps:
       - name: Checkout ${{ github.sha }}
         uses: actions/checkout@v4
       
-      - name: Use Node.js LTS
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
       
       - name: Install dependencies
         run: npm ci
       
-      - name: Build DXT package
-        run: ./build-dxt.sh
+      - name: Build and test DXT package
+        run: npm run test -- 'src/e2e.test.ts'
+        env:
+          RUN_DXT_TEST: TRUE
       
-      # This unzipping is necessary as a workaround for https://github.com/actions/upload-artifact/issues/39
+      # Only upload artifacts and release assets from the LTS build to avoid duplicates
       - name: Prepare artifact
+        if: matrix.node-version == 'lts/*'
         run: |
-          mkdir .github/tmp
+          mkdir -p .github/tmp
           unzip airtable-mcp-server.dxt -d .github/tmp
       
       - name: Publish DXT artifact
+        if: matrix.node-version == 'lts/*'
         uses: actions/upload-artifact@v4
         with:
           name: airtable-mcp-server-dxt
           path: .github/tmp/*
       
       - name: Upload DXT package as release asset
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' && matrix.node-version == 'lts/*'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
