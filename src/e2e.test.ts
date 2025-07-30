@@ -229,7 +229,7 @@ describe.each([
           type: 'object',
         }),
       });
-    });
+    }, 30_000);
 
     test('should list bases, tables, and records', async () => {
       // First get bases
@@ -332,7 +332,7 @@ describe.each([
         // eslint-disable-next-line no-console
         console.warn('Skipping list_records test as no tables found');
       }
-    });
+    }, 30_000);
 
     test('should list and read resources', async () => {
       // First list resources
@@ -380,6 +380,6 @@ describe.each([
         name: expect.any(String),
         fields: expect.any(Array),
       });
-    });
+    }, 30_000);
   });
 });
