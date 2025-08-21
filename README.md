@@ -1,4 +1,5 @@
 # airtable-mcp-server
+[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/domdomegg/airtable-mcp-server)](https://archestra.ai/mcp-catalog/domdomegg__airtable-mcp-server)
 
 A Model Context Protocol server that provides read and write access to Airtable databases. This server enables LLMs to inspect database schemas, then read and write records.
 
