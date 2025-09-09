@@ -1,19 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "name": "io.github.domdomegg/airtable-mcp-server",
-  "description": "A Model Context Protocol server that provides read and write access to Airtable databases. This server enables LLMs to inspect database schemas, then read and write records.",
+  "description": "Read and write access to Airtable database schemas, tables, and records.",
   "status": "active",
   "repository": {
     "url": "https://github.com/domdomegg/airtable-mcp-server.git",
     "source": "github"
   },
-  "version_detail": {
-    "version": "{{VERSION}}"
-  },
+  "version": "{{VERSION}}",
   "packages": [
     {
-      "registry_name": "npm",
-      "name": "airtable-mcp-server",
+      "registry_type": "npm",
+      "identifier": "airtable-mcp-server",
       "version": "{{VERSION}}",
       "runtime_hint": "npx",
       "environment_variables": [
@@ -26,18 +24,10 @@
       ]
     },
     {
-      "registry_name": "docker",
-      "name": "domdomegg/airtable-mcp-server",
+      "registry_type": "docker",
+      "identifier": "domdomegg/airtable-mcp-server",
       "version": "{{VERSION}}",
       "runtime_hint": "docker",
-      "package_arguments": [
-        {
-          "type": "positional",
-          "value_hint": "AIRTABLE_API_KEY",
-          "description": "Airtable API key will be passed as environment variable",
-          "is_required": true
-        }
-      ],
       "environment_variables": [
         {
           "name": "AIRTABLE_API_KEY",
@@ -48,20 +38,11 @@
       ]
     },
     {
-      "registry_name": "mcpb",
-      "name": "airtable-mcp-server",
+      "registry_type": "mcpb",
+      "identifier": "airtable-mcp-server",
       "version": "{{VERSION}}",
       "download_url": "https://github.com/domdomegg/airtable-mcp-server/releases/download/v{{VERSION}}/airtable-mcp-server.mcpb",
-      "user_config": [
-        {
-          "name": "api_key",
-          "type": "string",
-          "title": "Airtable API Key",
-          "description": "Your Airtable personal access token. Should have at least schema.bases:read and data.records:read permissions, and optionally the corresponding write permissions.",
-          "is_required": true,
-          "is_secret": true
-        }
-      ]
+      "file_sha256": "{{MCPB_FILE_SHA256}}"
     }
   ]
 }
