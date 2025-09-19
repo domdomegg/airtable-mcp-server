@@ -256,10 +256,8 @@ describe.each([
 			expect(basesResult).toMatchObject({
 				content: [{
 					type: 'text',
-					mimeType: 'application/json',
 					text: expect.any(String),
 				}],
-				isError: false,
 			});
 
 			const bases = JSON.parse(basesResult.content[0]!.text as string);
@@ -289,10 +287,8 @@ describe.each([
 			expect(tablesResult).toMatchObject({
 				content: [{
 					type: 'text',
-					mimeType: 'application/json',
 					text: expect.any(String),
 				}],
-				isError: false,
 			});
 
 			const tables = JSON.parse(tablesResult.content[0]!.text as string);
@@ -324,10 +320,8 @@ describe.each([
 				expect(recordsResult).toMatchObject({
 					content: [{
 						type: 'text',
-						mimeType: 'application/json',
 						text: expect.any(String),
 					}],
-					isError: false,
 				});
 
 				const records = JSON.parse(recordsResult.content[0]!.text as string);

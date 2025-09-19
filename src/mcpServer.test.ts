@@ -115,6 +115,7 @@ describe('AirtableMCPServer', () => {
 					uri: 'airtable://base1/tbl1/schema',
 					mimeType: 'application/json',
 					name: 'Test Base: Test Table schema',
+					description: 'Table schemas from Airtable bases',
 				}],
 			});
 		});
@@ -182,12 +183,10 @@ describe('AirtableMCPServer', () => {
 			expect(response.result).toEqual({
 				content: [{
 					type: 'text',
-					mimeType: 'application/json',
 					text: JSON.stringify([
 						{id: 'rec1', fields: {name: 'Test Record'}},
 					]),
 				}],
-				isError: false,
 			});
 		});
 	});

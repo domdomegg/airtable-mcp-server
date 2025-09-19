@@ -1,17 +1,6 @@
-import {Server} from '@modelcontextprotocol/sdk/server/index.js';
-import {
-	CallToolRequestSchema,
-	ListResourcesRequestSchema,
-	ListToolsRequestSchema,
-	ReadResourceRequestSchema,
-	type CallToolResult,
-	type ListToolsResult,
-	type ReadResourceResult,
-	type ListResourcesResult,
-} from '@modelcontextprotocol/sdk/types.js';
-import {type z} from 'zod';
-import {zodToJsonSchema} from 'zod-to-json-schema';
+import {McpServer, ResourceTemplate} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {type Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
+import {z} from 'zod';
 import {
 	ListRecordsArgsSchema,
 	ListTablesArgsSchema,
@@ -29,42 +18,14 @@ import {
 	type IAirtableMCPServer,
 } from './types.js';
 
-const getInputSchema = (schema: z.ZodType<object>): ListToolsResult['tools'][0]['inputSchema'] => {
-	const jsonSchema = zodToJsonSchema(schema);
-	if (!('type' in jsonSchema) || jsonSchema.type !== 'object') {
-		throw new Error(`Invalid input schema to convert in airtable-mcp-server: expected an object but got ${'type' in jsonSchema ? String(jsonSchema.type) : 'no type'}`);
-	}
-
-	return {...jsonSchema, type: 'object'};
-};
-
-const formatToolResponse = (data: unknown, isError = false): CallToolResult => {
-	return {
-		content: [{
-			type: 'text',
-			mimeType: 'application/json',
-			text: JSON.stringify(data),
-		}],
-		isError,
-	};
-};
-
 export class AirtableMCPServer implements IAirtableMCPServer {
-	private readonly server: Server;
+	private readonly server: McpServer;
 
 	constructor(private readonly airtableService: IAirtableService) {
-		this.server = new Server(
-			{
-				name: 'airtable-mcp-server',
-				version: '0.1.0',
-			},
-			{
-				capabilities: {
-					resources: {},
-					tools: {},
-				},
-			},
-		);
+		this.server = new McpServer({
+			name: 'airtable-mcp-server',
+			version: '0.1.0',
+		});
 		this.initializeHandlers();
 	}
 
@@ -77,233 +38,179 @@ export class AirtableMCPServer implements IAirtableMCPServer {
 	}
 
 	private initializeHandlers(): void {
-		this.server.setRequestHandler(ListResourcesRequestSchema, this.handleListResources.bind(this));
-		this.server.setRequestHandler(ReadResourceRequestSchema, this.handleReadResource.bind(this));
-		this.server.setRequestHandler(ListToolsRequestSchema, this.handleListTools.bind(this));
-		this.server.setRequestHandler(CallToolRequestSchema, this.handleCallTool.bind(this));
+		this.registerResources();
+		this.registerTools();
 	}
 
-	private async handleListResources(): Promise<ListResourcesResult> {
-		const {bases} = await this.airtableService.listBases();
-		const resources = await Promise.all(bases.map(async (base) => {
-			const schema = await this.airtableService.getBaseSchema(base.id);
-			return schema.tables.map((table) => ({
-				uri: `airtable://${base.id}/${table.id}/schema`,
-				mimeType: 'application/json',
-				name: `${base.name}: ${table.name} schema`,
-			}));
-		}));
-
-		return {
-			resources: resources.flat(),
-		};
-	}
-
-	private async handleReadResource(request: z.infer<typeof ReadResourceRequestSchema>): Promise<ReadResourceResult> {
-		const {uri} = request.params;
-		const match = /^airtable:\/\/([^/]+)\/([^/]+)\/schema$/.exec(uri);
-
-		if (!match?.[1] || !match[2]) {
-			throw new Error('Invalid resource URI');
-		}
-
-		const [, baseId, tableId] = match;
-		const schema = await this.airtableService.getBaseSchema(baseId);
-		const table = schema.tables.find((t) => t.id === tableId);
-
-		if (!table) {
-			throw new Error(`Table ${tableId} not found in base ${baseId}`);
-		}
-
-		return {
-			contents: [
-				{
-					uri: request.params.uri,
-					mimeType: 'application/json',
-					text: JSON.stringify({
-						baseId,
-						tableId: table.id,
-						name: table.name,
-						description: table.description,
-						primaryFieldId: table.primaryFieldId,
-						fields: table.fields,
-						views: table.views,
-					}),
-				},
-			],
-		};
-	}
-
-	private async handleListTools(): Promise<ListToolsResult> {
-		return {
-			tools: [
-				{
-					name: 'list_records',
-					description: 'List records from a table',
-					inputSchema: getInputSchema(ListRecordsArgsSchema),
-				},
-				{
-					name: 'search_records',
-					description: 'Search for records containing specific text',
-					inputSchema: getInputSchema(SearchRecordsArgsSchema),
-				},
-				{
-					name: 'list_bases',
-					description: 'List all accessible Airtable bases',
-					inputSchema: {
-						type: 'object',
-						properties: {},
-						required: [],
-					},
-				},
-				{
-					name: 'list_tables',
-					description: 'List all tables in a specific base',
-					inputSchema: getInputSchema(ListTablesArgsSchema),
-				},
-				{
-					name: 'describe_table',
-					description: 'Get detailed information about a specific table',
-					inputSchema: getInputSchema(DescribeTableArgsSchema),
-				},
-				{
-					name: 'get_record',
-					description: 'Get a specific record by ID',
-					inputSchema: getInputSchema(GetRecordArgsSchema),
-				},
-				{
-					name: 'create_record',
-					description: 'Create a new record in a table',
-					inputSchema: getInputSchema(CreateRecordArgsSchema),
-				},
-				{
-					name: 'update_records',
-					description: 'Update up to 10 records in a table',
-					inputSchema: getInputSchema(UpdateRecordsArgsSchema),
-				},
-				{
-					name: 'delete_records',
-					description: 'Delete records from a table',
-					inputSchema: getInputSchema(DeleteRecordsArgsSchema),
-				},
-				{
-					name: 'create_table',
-					description: 'Create a new table in a base',
-					inputSchema: getInputSchema(CreateTableArgsSchema),
-				},
-				{
-					name: 'update_table',
-					description: 'Update a table\'s name or description',
-					inputSchema: getInputSchema(UpdateTableArgsSchema),
-				},
-				{
-					name: 'create_field',
-					description: 'Create a new field in a table',
-					inputSchema: getInputSchema(CreateFieldArgsSchema),
-				},
-				{
-					name: 'update_field',
-					description: 'Update a field\'s name or description',
-					inputSchema: getInputSchema(UpdateFieldArgsSchema),
-				},
-			],
-		};
-	}
-
-	private async handleCallTool(request: z.infer<typeof CallToolRequestSchema>): Promise<CallToolResult> {
-		try {
-			switch (request.params.name) {
-				case 'list_records': {
-					const args = ListRecordsArgsSchema.parse(request.params.arguments);
-					const records = await this.airtableService.listRecords(
-						args.baseId,
-						args.tableId,
-						{
-							view: args.view,
-							maxRecords: args.maxRecords,
-							filterByFormula: args.filterByFormula,
-							sort: args.sort,
-						},
-					);
-					return formatToolResponse(records);
-				}
-
-				case 'search_records': {
-					const args = SearchRecordsArgsSchema.parse(request.params.arguments);
-					const records = await this.airtableService.searchRecords(
-						args.baseId,
-						args.tableId,
-						args.searchTerm,
-						args.fieldIds,
-						args.maxRecords,
-						args.view,
-					);
-					return formatToolResponse(records);
-				}
-
-				case 'list_bases': {
+	private registerResources(): void {
+		const template = new ResourceTemplate(
+			'airtable://{baseId}/{tableId}/schema',
+			{
+				list: async () => {
 					const {bases} = await this.airtableService.listBases();
-					return formatToolResponse(bases.map((base) => ({
-						id: base.id,
-						name: base.name,
-						permissionLevel: base.permissionLevel,
-					})));
-				}
-
-				case 'list_tables': {
-					const args = ListTablesArgsSchema.parse(request.params.arguments);
-					const schema = await this.airtableService.getBaseSchema(args.baseId);
-					return formatToolResponse(schema.tables.map((table) => {
-						switch (args.detailLevel) {
-							case 'tableIdentifiersOnly':
-								return {
-									id: table.id,
-									name: table.name,
-								};
-							case 'identifiersOnly':
-								return {
-									id: table.id,
-									name: table.name,
-									fields: table.fields.map((field) => ({
-										id: field.id,
-										name: field.name,
-									})),
-									views: table.views.map((view) => ({
-										id: view.id,
-										name: view.name,
-									})),
-								};
-							case 'full':
-							// eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check, no-fallthrough
-							default:
-								return {
-									id: table.id,
-									name: table.name,
-									description: table.description,
-									fields: table.fields,
-									views: table.views,
-								};
-						}
+					const resources = await Promise.all(bases.map(async (base) => {
+						const schema = await this.airtableService.getBaseSchema(base.id);
+						return schema.tables.map((table) => ({
+							uri: `airtable://${base.id}/${table.id}/schema`,
+							mimeType: 'application/json',
+							name: `${base.name}: ${table.name} schema`,
+						}));
 					}));
+
+					return {
+						resources: resources.flat(),
+					};
+				},
+			},
+		);
+
+		this.server.registerResource(
+			'airtable-schema',
+			template,
+			{
+				mimeType: 'application/json',
+				description: 'Table schemas from Airtable bases',
+			},
+			async (uri, variables) => {
+				const baseId = Array.isArray(variables.baseId) ? variables.baseId[0] : variables.baseId;
+				const tableId = Array.isArray(variables.tableId) ? variables.tableId[0] : variables.tableId;
+
+				if (!baseId || !tableId) {
+					throw new Error('Invalid resource URI: missing baseId or tableId');
 				}
 
-				case 'describe_table': {
-					const args = DescribeTableArgsSchema.parse(request.params.arguments);
-					const schema = await this.airtableService.getBaseSchema(args.baseId);
-					const table = schema.tables.find((t) => t.id === args.tableId);
+				const schema = await this.airtableService.getBaseSchema(baseId);
+				const table = schema.tables.find((t) => t.id === tableId);
 
-					if (!table) {
-						return formatToolResponse(`Table ${args.tableId} not found in base ${args.baseId}`, true);
-					}
+				if (!table) {
+					throw new Error(`Table ${tableId} not found in base ${baseId}`);
+				}
 
-					switch (args.detailLevel) {
+				return {
+					contents: [
+						{
+							uri: uri.toString(),
+							mimeType: 'application/json',
+							text: JSON.stringify({
+								baseId,
+								tableId: table.id,
+								name: table.name,
+								description: table.description,
+								primaryFieldId: table.primaryFieldId,
+								fields: table.fields,
+								views: table.views,
+							}),
+						},
+					],
+				};
+			},
+		);
+	}
+
+	private registerTools(): void {
+		this.server.registerTool(
+			'list_records',
+			{
+				description: 'List records from a table',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					tableId: z.string().describe('The ID or name of the table'),
+					view: z.string().optional().describe('The name or ID of a view in the table'),
+					maxRecords: z.number().optional().describe('The maximum total number of records that will be returned'),
+					filterByFormula: z.string().optional().describe('A formula used to filter records'),
+					sort: z.array(z.object({
+						field: z.string(),
+						direction: z.enum(['asc', 'desc']).optional(),
+					})).optional().describe('A list of sort objects that specifies how the records will be ordered'),
+				},
+			},
+			async (args) => {
+				const parsedArgs = ListRecordsArgsSchema.parse(args);
+				const records = await this.airtableService.listRecords(
+					parsedArgs.baseId,
+					parsedArgs.tableId,
+					{
+						view: parsedArgs.view,
+						maxRecords: parsedArgs.maxRecords,
+						filterByFormula: parsedArgs.filterByFormula,
+						sort: parsedArgs.sort,
+					},
+				);
+				return {
+					content: [{type: 'text', text: JSON.stringify(records)}],
+				};
+			},
+		);
+
+		this.server.registerTool(
+			'search_records',
+			{
+				description: 'Search for records containing specific text',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					tableId: z.string().describe('The ID or name of the table'),
+					searchTerm: z.string().describe('The text to search for'),
+					fieldIds: z.array(z.string()).optional().describe('Optional array of field IDs to search in'),
+					maxRecords: z.number().optional().describe('The maximum total number of records that will be returned'),
+					view: z.string().optional().describe('The name or ID of a view in the table'),
+				},
+			},
+			async (args) => {
+				const parsedArgs = SearchRecordsArgsSchema.parse(args);
+				const records = await this.airtableService.searchRecords(
+					parsedArgs.baseId,
+					parsedArgs.tableId,
+					parsedArgs.searchTerm,
+					parsedArgs.fieldIds,
+					parsedArgs.maxRecords,
+					parsedArgs.view,
+				);
+				return {
+					content: [{type: 'text', text: JSON.stringify(records)}],
+				};
+			},
+		);
+
+		this.server.registerTool(
+			'list_bases',
+			{
+				description: 'List all accessible Airtable bases',
+				inputSchema: {},
+			},
+			async () => {
+				const {bases} = await this.airtableService.listBases();
+				const result = bases.map((base) => ({
+					id: base.id,
+					name: base.name,
+					permissionLevel: base.permissionLevel,
+				}));
+				return {
+					content: [{type: 'text', text: JSON.stringify(result)}],
+				};
+			},
+		);
+
+		this.server.registerTool(
+			'list_tables',
+			{
+				description: 'List all tables in a specific base',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					detailLevel: z.enum(['tableIdentifiersOnly', 'identifiersOnly', 'full']).optional().default('full').describe('Level of detail to return'),
+				},
+			},
+			async (args) => {
+				const parsedArgs = ListTablesArgsSchema.parse(args);
+				const schema = await this.airtableService.getBaseSchema(parsedArgs.baseId);
+				const result = schema.tables.map((table) => {
+					switch (parsedArgs.detailLevel) {
 						case 'tableIdentifiersOnly':
-							return formatToolResponse({
+							return {
 								id: table.id,
 								name: table.name,
-							});
+							};
 						case 'identifiersOnly':
-							return formatToolResponse({
+							return {
 								id: table.id,
 								name: table.name,
 								fields: table.fields.map((field) => ({
@@ -314,109 +221,270 @@ export class AirtableMCPServer implements IAirtableMCPServer {
 									id: view.id,
 									name: view.name,
 								})),
-							});
+							};
 						case 'full':
 						// eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check, no-fallthrough
 						default:
-							return formatToolResponse({
+							return {
 								id: table.id,
 								name: table.name,
 								description: table.description,
 								fields: table.fields,
 								views: table.views,
-							});
+							};
 					}
+				});
+				return {
+					content: [{type: 'text', text: JSON.stringify(result)}],
+				};
+			},
+		);
+
+		this.server.registerTool(
+			'describe_table',
+			{
+				description: 'Get detailed information about a specific table',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					tableId: z.string().describe('The ID or name of the table'),
+					detailLevel: z.enum(['tableIdentifiersOnly', 'identifiersOnly', 'full']).optional().default('full').describe('Level of detail to return'),
+				},
+			},
+			async (args) => {
+				const parsedArgs = DescribeTableArgsSchema.parse(args);
+				const schema = await this.airtableService.getBaseSchema(parsedArgs.baseId);
+				const table = schema.tables.find((t) => t.id === parsedArgs.tableId);
+
+				if (!table) {
+					throw new Error(`Table ${parsedArgs.tableId} not found in base ${parsedArgs.baseId}`);
 				}
 
-				case 'get_record': {
-					const args = GetRecordArgsSchema.parse(request.params.arguments);
-					const record = await this.airtableService.getRecord(args.baseId, args.tableId, args.recordId);
-					return formatToolResponse({
-						id: record.id,
-						fields: record.fields,
-					});
+				let result;
+				switch (parsedArgs.detailLevel) {
+					case 'tableIdentifiersOnly':
+						result = {
+							id: table.id,
+							name: table.name,
+						};
+						break;
+					case 'identifiersOnly':
+						result = {
+							id: table.id,
+							name: table.name,
+							fields: table.fields.map((field) => ({
+								id: field.id,
+								name: field.name,
+							})),
+							views: table.views.map((view) => ({
+								id: view.id,
+								name: view.name,
+							})),
+						};
+						break;
+					case 'full':
+					// eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check, no-fallthrough
+					default:
+						result = {
+							id: table.id,
+							name: table.name,
+							description: table.description,
+							fields: table.fields,
+							views: table.views,
+						};
+						break;
 				}
 
-				case 'create_record': {
-					const args = CreateRecordArgsSchema.parse(request.params.arguments);
-					const record = await this.airtableService.createRecord(args.baseId, args.tableId, args.fields);
-					return formatToolResponse({
-						id: record.id,
-						fields: record.fields,
-					});
-				}
+				return {
+					content: [{type: 'text', text: JSON.stringify(result)}],
+				};
+			},
+		);
 
-				case 'update_records': {
-					const args = UpdateRecordsArgsSchema.parse(request.params.arguments);
-					const records = await this.airtableService.updateRecords(args.baseId, args.tableId, args.records);
-					return formatToolResponse(records.map((record) => ({
-						id: record.id,
-						fields: record.fields,
-					})));
-				}
+		this.server.registerTool(
+			'get_record',
+			{
+				description: 'Get a specific record by ID',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					tableId: z.string().describe('The ID or name of the table'),
+					recordId: z.string().describe('The ID of the record'),
+				},
+			},
+			async (args) => {
+				const parsedArgs = GetRecordArgsSchema.parse(args);
+				const record = await this.airtableService.getRecord(parsedArgs.baseId, parsedArgs.tableId, parsedArgs.recordId);
+				return {
+					content: [{type: 'text', text: JSON.stringify({id: record.id, fields: record.fields})}],
+				};
+			},
+		);
 
-				case 'delete_records': {
-					const args = DeleteRecordsArgsSchema.parse(request.params.arguments);
-					const records = await this.airtableService.deleteRecords(args.baseId, args.tableId, args.recordIds);
-					return formatToolResponse(records.map((record) => ({
-						id: record.id,
-					})));
-				}
+		this.server.registerTool(
+			'create_record',
+			{
+				description: 'Create a new record in a table',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					tableId: z.string().describe('The ID or name of the table'),
+					fields: z.record(z.unknown()).describe('The fields for the new record'),
+				},
+			},
+			async (args) => {
+				const parsedArgs = CreateRecordArgsSchema.parse(args);
+				const record = await this.airtableService.createRecord(parsedArgs.baseId, parsedArgs.tableId, parsedArgs.fields);
+				return {
+					content: [{type: 'text', text: JSON.stringify({id: record.id, fields: record.fields})}],
+				};
+			},
+		);
 
-				case 'create_table': {
-					const args = CreateTableArgsSchema.parse(request.params.arguments);
-					const table = await this.airtableService.createTable(
-						args.baseId,
-						args.name,
-						args.fields,
-						args.description,
-					);
-					return formatToolResponse(table);
-				}
+		this.server.registerTool(
+			'update_records',
+			{
+				description: 'Update up to 10 records in a table',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					tableId: z.string().describe('The ID or name of the table'),
+					records: z.array(z.object({
+						id: z.string(),
+						fields: z.record(z.unknown()),
+					})).describe('Array of records to update (max 10)'),
+				},
+			},
+			async (args) => {
+				const parsedArgs = UpdateRecordsArgsSchema.parse(args);
+				const records = await this.airtableService.updateRecords(parsedArgs.baseId, parsedArgs.tableId, parsedArgs.records);
+				const result = records.map((record) => ({
+					id: record.id,
+					fields: record.fields,
+				}));
+				return {
+					content: [{type: 'text', text: JSON.stringify(result)}],
+				};
+			},
+		);
 
-				case 'update_table': {
-					const args = UpdateTableArgsSchema.parse(request.params.arguments);
-					const table = await this.airtableService.updateTable(
-						args.baseId,
-						args.tableId,
-						{name: args.name, description: args.description},
-					);
-					return formatToolResponse(table);
-				}
+		this.server.registerTool(
+			'delete_records',
+			{
+				description: 'Delete records from a table',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					tableId: z.string().describe('The ID or name of the table'),
+					recordIds: z.array(z.string()).describe('Array of record IDs to delete'),
+				},
+			},
+			async (args) => {
+				const parsedArgs = DeleteRecordsArgsSchema.parse(args);
+				const records = await this.airtableService.deleteRecords(parsedArgs.baseId, parsedArgs.tableId, parsedArgs.recordIds);
+				const result = records.map((record) => ({id: record.id}));
+				return {
+					content: [{type: 'text', text: JSON.stringify(result)}],
+				};
+			},
+		);
 
-				case 'create_field': {
-					const args = CreateFieldArgsSchema.parse(request.params.arguments);
-					const field = await this.airtableService.createField(
-						args.baseId,
-						args.tableId,
-						args.nested.field,
-					);
-					return formatToolResponse(field);
-				}
+		this.server.registerTool(
+			'create_table',
+			{
+				description: 'Create a new table in a base',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					name: z.string().describe('The name of the table'),
+					fields: z.array(z.record(z.unknown())).describe('Array of field definitions'),
+					description: z.string().optional().describe('Optional description for the table'),
+				},
+			},
+			async (args) => {
+				const parsedArgs = CreateTableArgsSchema.parse(args);
+				const table = await this.airtableService.createTable(
+					parsedArgs.baseId,
+					parsedArgs.name,
+					parsedArgs.fields,
+					parsedArgs.description,
+				);
+				return {
+					content: [{type: 'text', text: JSON.stringify(table)}],
+				};
+			},
+		);
 
-				case 'update_field': {
-					const args = UpdateFieldArgsSchema.parse(request.params.arguments);
-					const field = await this.airtableService.updateField(
-						args.baseId,
-						args.tableId,
-						args.fieldId,
-						{
-							name: args.name,
-							description: args.description,
-						},
-					);
-					return formatToolResponse(field);
-				}
+		this.server.registerTool(
+			'update_table',
+			{
+				description: 'Update a table\'s name or description',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					tableId: z.string().describe('The ID or name of the table'),
+					name: z.string().optional().describe('New name for the table'),
+					description: z.string().optional().describe('New description for the table'),
+				},
+			},
+			async (args) => {
+				const parsedArgs = UpdateTableArgsSchema.parse(args);
+				const table = await this.airtableService.updateTable(
+					parsedArgs.baseId,
+					parsedArgs.tableId,
+					{name: parsedArgs.name, description: parsedArgs.description},
+				);
+				return {
+					content: [{type: 'text', text: JSON.stringify(table)}],
+				};
+			},
+		);
 
-				default: {
-					throw new Error(`Unknown tool: ${request.params.name}`);
-				}
-			}
-		} catch (error) {
-			return formatToolResponse(
-				`Error in tool ${request.params.name}: ${error instanceof Error ? error.message : String(error)}`,
-				true,
-			);
-		}
+		this.server.registerTool(
+			'create_field',
+			{
+				description: 'Create a new field in a table',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					tableId: z.string().describe('The ID or name of the table'),
+					nested: z.object({
+						field: z.record(z.unknown()).describe('Field definition'),
+					}),
+				},
+			},
+			async (args) => {
+				const parsedArgs = CreateFieldArgsSchema.parse(args);
+				const field = await this.airtableService.createField(
+					parsedArgs.baseId,
+					parsedArgs.tableId,
+					parsedArgs.nested.field,
+				);
+				return {
+					content: [{type: 'text', text: JSON.stringify(field)}],
+				};
+			},
+		);
+
+		this.server.registerTool(
+			'update_field',
+			{
+				description: 'Update a field\'s name or description',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					tableId: z.string().describe('The ID or name of the table'),
+					fieldId: z.string().describe('The ID of the field'),
+					name: z.string().optional().describe('New name for the field'),
+					description: z.string().optional().describe('New description for the field'),
+				},
+			},
+			async (args) => {
+				const parsedArgs = UpdateFieldArgsSchema.parse(args);
+				const field = await this.airtableService.updateField(
+					parsedArgs.baseId,
+					parsedArgs.tableId,
+					parsedArgs.fieldId,
+					{
+						name: parsedArgs.name,
+						description: parsedArgs.description,
+					},
+				);
+				return {
+					content: [{type: 'text', text: JSON.stringify(field)}],
+				};
+			},
+		);
 	}
 }
