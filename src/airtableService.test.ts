@@ -403,5 +403,169 @@ describe('AirtableService', () => {
 				expect(result).toEqual([{id: mockRecordId}]);
 			});
 		});
+
+		describe('comment operations', () => {
+			const mockBaseId = 'base123';
+			const mockTableId = 'table123';
+			const mockRecordId = 'rec123';
+
+			test('creates comment successfully', async () => {
+				const mockComment = {
+					id: 'com123',
+					createdTime: '2021-03-01T09:00:00.000Z',
+					lastUpdatedTime: null,
+					text: 'Test comment',
+					author: {
+						id: 'usr123',
+						email: 'test@example.com',
+						name: 'Test User',
+					},
+				};
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					text: async () => Promise.resolve(JSON.stringify(mockComment)),
+				});
+
+				const result = await service.createComment(mockBaseId, mockTableId, mockRecordId, 'Test comment');
+
+				expect(mockFetch).toHaveBeenCalledWith(
+					`${mockBaseUrl}/v0/${mockBaseId}/${mockTableId}/${mockRecordId}/comments`,
+					expect.objectContaining({
+						method: 'POST',
+						body: JSON.stringify({text: 'Test comment'}),
+					}),
+				);
+				expect(result).toEqual(mockComment);
+			});
+
+			test('creates threaded comment reply successfully', async () => {
+				const mockComment = {
+					id: 'com456',
+					createdTime: '2021-03-01T10:00:00.000Z',
+					lastUpdatedTime: null,
+					text: 'Reply comment',
+					parentCommentId: 'com123',
+					author: {
+						id: 'usr123',
+						email: 'test@example.com',
+						name: 'Test User',
+					},
+				};
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					text: async () => Promise.resolve(JSON.stringify(mockComment)),
+				});
+
+				const result = await service.createComment(
+					mockBaseId,
+					mockTableId,
+					mockRecordId,
+					'Reply comment',
+					'com123',
+				);
+
+				expect(mockFetch).toHaveBeenCalledWith(
+					`${mockBaseUrl}/v0/${mockBaseId}/${mockTableId}/${mockRecordId}/comments`,
+					expect.objectContaining({
+						method: 'POST',
+						body: JSON.stringify({text: 'Reply comment', parentCommentId: 'com123'}),
+					}),
+				);
+				expect(result).toEqual(mockComment);
+			});
+
+			test('lists comments successfully', async () => {
+				const mockResponse = {
+					comments: [
+						{
+							id: 'com123',
+							createdTime: '2021-03-01T09:00:00.000Z',
+							lastUpdatedTime: null,
+							text: 'Test comment',
+							author: {
+								id: 'usr123',
+								email: 'test@example.com',
+								name: 'Test User',
+							},
+						},
+					],
+					offset: null,
+				};
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					text: async () => Promise.resolve(JSON.stringify(mockResponse)),
+				});
+
+				const result = await service.listComments(mockBaseId, mockTableId, mockRecordId);
+
+				expect(mockFetch).toHaveBeenCalledWith(
+					`${mockBaseUrl}/v0/${mockBaseId}/${mockTableId}/${mockRecordId}/comments`,
+					expect.any(Object),
+				);
+				expect(result).toEqual(mockResponse);
+			});
+
+			test('lists comments with pageSize parameter', async () => {
+				const mockResponse = {
+					comments: [
+						{
+							id: 'com123',
+							createdTime: '2021-03-01T09:00:00.000Z',
+							lastUpdatedTime: null,
+							text: 'Test comment',
+							author: {
+								id: 'usr123',
+								email: 'test@example.com',
+								name: 'Test User',
+							},
+						},
+					],
+					offset: 'offset123',
+				};
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					text: async () => Promise.resolve(JSON.stringify(mockResponse)),
+				});
+
+				const result = await service.listComments(mockBaseId, mockTableId, mockRecordId, 50);
+
+				expect(mockFetch).toHaveBeenCalledWith(
+					`${mockBaseUrl}/v0/${mockBaseId}/${mockTableId}/${mockRecordId}/comments?pageSize=50`,
+					expect.any(Object),
+				);
+				expect(result).toEqual(mockResponse);
+			});
+
+			test('lists comments with offset for pagination', async () => {
+				const mockResponse = {
+					comments: [
+						{
+							id: 'com456',
+							createdTime: '2021-03-01T10:00:00.000Z',
+							lastUpdatedTime: null,
+							text: 'Another comment',
+							author: {
+								id: 'usr456',
+								email: 'another@example.com',
+								name: 'Another User',
+							},
+						},
+					],
+					offset: null,
+				};
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					text: async () => Promise.resolve(JSON.stringify(mockResponse)),
+				});
+
+				const result = await service.listComments(mockBaseId, mockTableId, mockRecordId, 50, 'offset123');
+
+				expect(mockFetch).toHaveBeenCalledWith(
+					`${mockBaseUrl}/v0/${mockBaseId}/${mockTableId}/${mockRecordId}/comments?pageSize=50&offset=offset123`,
+					expect.any(Object),
+				);
+				expect(result).toEqual(mockResponse);
+			});
+		});
 	});
 });

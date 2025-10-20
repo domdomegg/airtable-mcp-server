@@ -14,6 +14,8 @@ import {
 	CreateFieldArgsSchema,
 	UpdateFieldArgsSchema,
 	SearchRecordsArgsSchema,
+	CreateCommentArgsSchema,
+	ListCommentsArgsSchema,
 	type IAirtableService,
 	type IAirtableMCPServer,
 } from './types.js';
@@ -483,6 +485,60 @@ export class AirtableMCPServer implements IAirtableMCPServer {
 				);
 				return {
 					content: [{type: 'text', text: JSON.stringify(field)}],
+				};
+			},
+		);
+
+		this.server.registerTool(
+			'create_comment',
+			{
+				description: 'Create a comment on a record',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					tableId: z.string().describe('The ID or name of the table'),
+					recordId: z.string().describe('The ID of the record'),
+					text: z.string().describe('The comment text'),
+					parentCommentId: z.string().optional().describe('Optional parent comment ID for threaded replies'),
+				},
+			},
+			async (args) => {
+				const parsedArgs = CreateCommentArgsSchema.parse(args);
+				const comment = await this.airtableService.createComment(
+					parsedArgs.baseId,
+					parsedArgs.tableId,
+					parsedArgs.recordId,
+					parsedArgs.text,
+					parsedArgs.parentCommentId,
+				);
+				return {
+					content: [{type: 'text', text: JSON.stringify(comment)}],
+				};
+			},
+		);
+
+		this.server.registerTool(
+			'list_comments',
+			{
+				description: 'List comments on a record',
+				inputSchema: {
+					baseId: z.string().describe('The ID of the base'),
+					tableId: z.string().describe('The ID or name of the table'),
+					recordId: z.string().describe('The ID of the record'),
+					pageSize: z.number().optional().describe('Number of comments to return (max 100, default 100)'),
+					offset: z.string().optional().describe('Offset for pagination'),
+				},
+			},
+			async (args) => {
+				const parsedArgs = ListCommentsArgsSchema.parse(args);
+				const response = await this.airtableService.listComments(
+					parsedArgs.baseId,
+					parsedArgs.tableId,
+					parsedArgs.recordId,
+					parsedArgs.pageSize,
+					parsedArgs.offset,
+				);
+				return {
+					content: [{type: 'text', text: JSON.stringify(response)}],
 				};
 			},
 		);

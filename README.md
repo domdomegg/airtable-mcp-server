@@ -8,7 +8,7 @@ https://github.com/user-attachments/assets/c8285e76-d0ed-4018-94c7-20535db6c944
 
 **Step 1**: [Create an Airtable personal access token by clicking here](https://airtable.com/create/tokens/new). Details:
 - Name: Anything you want e.g. 'Airtable MCP Server Token'.
-- Scopes: `schema.bases:read`, `data.records:read`, and optionally `schema.bases:write` and `data.records:write`.
+- Scopes: `schema.bases:read`, `data.records:read`, and optionally `schema.bases:write`, `data.records:write`, `data.recordComments:read`, and `data.recordComments:write`.
 - Access: The bases you want to access. If you're not sure, select 'Add all resources'.
 
 Keep the token handy, you'll need it in the next step. It should look something like `pat123.abc123` (but longer).
@@ -219,6 +219,27 @@ Create either a global (`~/.cursor/mcp.json`) or project-specific (`.cursor/mcp.
     - `fieldId` (string, required): The ID of the field
     - `name` (string, optional): New name for the field
     - `description` (string, optional): New description for the field
+
+- **create_comment**
+  - Creates a comment on a record
+  - Input parameters:
+    - `baseId` (string, required): The ID of the Airtable base
+    - `tableId` (string, required): The ID of the table
+    - `recordId` (string, required): The ID of the record
+    - `text` (string, required): The comment text
+    - `parentCommentId` (string, optional): Parent comment ID for threaded replies
+  - Returns the created comment with ID, author, creation time, and text
+
+- **list_comments**
+  - Lists comments on a record
+  - Input parameters:
+    - `baseId` (string, required): The ID of the Airtable base
+    - `tableId` (string, required): The ID of the table
+    - `recordId` (string, required): The ID of the record
+    - `pageSize` (number, optional): Number of comments to return (max 100, default 100)
+    - `offset` (string, optional): Pagination offset for retrieving additional comments
+  - Returns comments array with author, text, timestamps, reactions, and mentions
+  - Comments are returned from newest to oldest
 
 ### Resources
 

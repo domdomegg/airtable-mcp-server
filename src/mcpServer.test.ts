@@ -76,6 +76,33 @@ describe('AirtableMCPServer', () => {
 			searchRecords: vi.fn().mockResolvedValue([
 				{id: 'rec1', fields: {name: 'Test Result'}},
 			]),
+			createComment: vi.fn().mockResolvedValue({
+				id: 'com123',
+				createdTime: '2021-03-01T09:00:00.000Z',
+				lastUpdatedTime: null,
+				text: 'Test comment',
+				author: {
+					id: 'usr123',
+					email: 'test@example.com',
+					name: 'Test User',
+				},
+			}),
+			listComments: vi.fn().mockResolvedValue({
+				comments: [
+					{
+						id: 'com123',
+						createdTime: '2021-03-01T09:00:00.000Z',
+						lastUpdatedTime: null,
+						text: 'Test comment',
+						author: {
+							id: 'usr123',
+							email: 'test@example.com',
+							name: 'Test User',
+						},
+					},
+				],
+				offset: null,
+			}),
 		};
 
 		// Create server instance with test transport
@@ -186,6 +213,160 @@ describe('AirtableMCPServer', () => {
 					text: JSON.stringify([
 						{id: 'rec1', fields: {name: 'Test Record'}},
 					]),
+				}],
+			});
+		});
+
+		test('handles create_comment tool call', async () => {
+			const response = await sendRequest({
+				jsonrpc: '2.0',
+				id: '1',
+				method: 'tools/call',
+				params: {
+					name: 'create_comment',
+					arguments: {
+						baseId: 'base1',
+						tableId: 'tbl1',
+						recordId: 'rec1',
+						text: 'Test comment',
+					},
+				},
+			});
+
+			expect(mockAirtableService.createComment).toHaveBeenCalledWith(
+				'base1',
+				'tbl1',
+				'rec1',
+				'Test comment',
+				undefined,
+			);
+
+			expect(response.result).toEqual({
+				content: [{
+					type: 'text',
+					text: JSON.stringify({
+						id: 'com123',
+						createdTime: '2021-03-01T09:00:00.000Z',
+						lastUpdatedTime: null,
+						text: 'Test comment',
+						author: {
+							id: 'usr123',
+							email: 'test@example.com',
+							name: 'Test User',
+						},
+					}),
+				}],
+			});
+		});
+
+		test('handles create_comment tool call with parent comment', async () => {
+			const response = await sendRequest({
+				jsonrpc: '2.0',
+				id: '1',
+				method: 'tools/call',
+				params: {
+					name: 'create_comment',
+					arguments: {
+						baseId: 'base1',
+						tableId: 'tbl1',
+						recordId: 'rec1',
+						text: 'Reply comment',
+						parentCommentId: 'com123',
+					},
+				},
+			});
+
+			expect(mockAirtableService.createComment).toHaveBeenCalledWith(
+				'base1',
+				'tbl1',
+				'rec1',
+				'Reply comment',
+				'com123',
+			);
+
+			expect(response.result).toEqual({
+				content: [{
+					type: 'text',
+					text: expect.any(String),
+				}],
+			});
+		});
+
+		test('handles list_comments tool call', async () => {
+			const response = await sendRequest({
+				jsonrpc: '2.0',
+				id: '1',
+				method: 'tools/call',
+				params: {
+					name: 'list_comments',
+					arguments: {
+						baseId: 'base1',
+						tableId: 'tbl1',
+						recordId: 'rec1',
+					},
+				},
+			});
+
+			expect(mockAirtableService.listComments).toHaveBeenCalledWith(
+				'base1',
+				'tbl1',
+				'rec1',
+				undefined,
+				undefined,
+			);
+
+			expect(response.result).toEqual({
+				content: [{
+					type: 'text',
+					text: JSON.stringify({
+						comments: [
+							{
+								id: 'com123',
+								createdTime: '2021-03-01T09:00:00.000Z',
+								lastUpdatedTime: null,
+								text: 'Test comment',
+								author: {
+									id: 'usr123',
+									email: 'test@example.com',
+									name: 'Test User',
+								},
+							},
+						],
+						offset: null,
+					}),
+				}],
+			});
+		});
+
+		test('handles list_comments tool call with pagination', async () => {
+			const response = await sendRequest({
+				jsonrpc: '2.0',
+				id: '1',
+				method: 'tools/call',
+				params: {
+					name: 'list_comments',
+					arguments: {
+						baseId: 'base1',
+						tableId: 'tbl1',
+						recordId: 'rec1',
+						pageSize: 50,
+						offset: 'offset123',
+					},
+				},
+			});
+
+			expect(mockAirtableService.listComments).toHaveBeenCalledWith(
+				'base1',
+				'tbl1',
+				'rec1',
+				50,
+				'offset123',
+			);
+
+			expect(response.result).toEqual({
+				content: [{
+					type: 'text',
+					text: expect.any(String),
 				}],
 			});
 		});

@@ -7,10 +7,14 @@ import {
 	type Field,
 	type Table,
 	type AirtableRecord,
+	type Comment,
+	type ListCommentsResponse,
 	ListBasesResponseSchema,
 	BaseSchemaResponseSchema,
 	TableSchema,
 	FieldSchema,
+	CommentSchema,
+	ListCommentsResponseSchema,
 	type FieldSet,
 } from './types.js';
 import {enhanceAirtableError} from './enhanceAirtableError.js';
@@ -213,6 +217,50 @@ export class AirtableService implements IAirtableService {
 		})`;
 
 		return this.listRecords(baseId, tableId, {maxRecords, filterByFormula, view});
+	}
+
+	async createComment(
+		baseId: string,
+		tableId: string,
+		recordId: string,
+		text: string,
+		parentCommentId?: string,
+	): Promise<Comment> {
+		const body: {text: string; parentCommentId?: string} = {text};
+		if (parentCommentId) {
+			body.parentCommentId = parentCommentId;
+		}
+
+		return this.fetchFromAPI(
+			`/v0/${baseId}/${tableId}/${recordId}/comments`,
+			CommentSchema,
+			{
+				method: 'POST',
+				body: JSON.stringify(body),
+			},
+		);
+	}
+
+	async listComments(
+		baseId: string,
+		tableId: string,
+		recordId: string,
+		pageSize?: number,
+		offset?: string,
+	): Promise<ListCommentsResponse> {
+		const queryParams = new URLSearchParams();
+		if (pageSize !== undefined) {
+			queryParams.append('pageSize', pageSize.toString());
+		}
+
+		if (offset) {
+			queryParams.append('offset', offset);
+		}
+
+		const queryString = queryParams.toString();
+		const endpoint = `/v0/${baseId}/${tableId}/${recordId}/comments${queryString ? `?${queryString}` : ''}`;
+
+		return this.fetchFromAPI(endpoint, ListCommentsResponseSchema);
 	}
 
 	private async validateAndGetSearchFields(

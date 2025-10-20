@@ -502,11 +502,63 @@ export const UpdateFieldArgsSchema = z.object({
 	description: z.string().optional(),
 });
 
+// Comment schemas
+export const CommentAuthorSchema = z.object({
+	id: z.string().describe('A user ID'),
+	email: z.string(),
+	name: z.string().optional(),
+});
+
+export const CommentReactionSchema = z.object({
+	emoji: z.object({
+		unicodeCharacter: z.string(),
+	}),
+	reactingUser: z.object({
+		userId: z.string().describe('A user ID'),
+		email: z.string(),
+		name: z.string().optional(),
+	}),
+});
+
+export const CommentSchema = z.object({
+	id: z.string().describe('A comment ID'),
+	createdTime: z.string().describe('A date timestamp in the ISO format'),
+	lastUpdatedTime: z.string().nullable().describe('A date timestamp in the ISO format, or null if not updated'),
+	text: z.string().describe('The comment text'),
+	author: CommentAuthorSchema,
+	parentCommentId: z.string().optional().describe('The comment ID of the parent comment, if this is a threaded reply'),
+	mentioned: z.record(z.any()).optional().describe('User mentions in the comment'),
+	reactions: z.array(CommentReactionSchema).optional().describe('List of reactions on this comment'),
+});
+
+export const ListCommentsResponseSchema = z.object({
+	comments: z.array(CommentSchema),
+	offset: z.string().nullable(),
+});
+
+export const CreateCommentArgsSchema = z.object({
+	baseId: z.string().describe('The ID of the base'),
+	tableId: z.string().describe('The ID or name of the table'),
+	recordId: z.string().describe('The ID of the record'),
+	text: z.string().describe('The comment text'),
+	parentCommentId: z.string().optional().describe('Optional parent comment ID for threaded replies'),
+});
+
+export const ListCommentsArgsSchema = z.object({
+	baseId: z.string().describe('The ID of the base'),
+	tableId: z.string().describe('The ID or name of the table'),
+	recordId: z.string().describe('The ID of the record'),
+	pageSize: z.number().optional().describe('Number of comments to return (max 100, default 100)'),
+	offset: z.string().optional().describe('Offset for pagination'),
+});
+
 export type ListBasesResponse = z.infer<typeof ListBasesResponseSchema>;
 export type BaseSchemaResponse = z.infer<typeof BaseSchemaResponseSchema>;
 export type Base = z.infer<typeof BaseSchema>;
 export type Table = z.infer<typeof TableSchema>;
 export type Field = z.infer<typeof FieldSchema>;
+export type Comment = z.infer<typeof CommentSchema>;
+export type ListCommentsResponse = z.infer<typeof ListCommentsResponseSchema>;
 
 export type FieldSet = Record<string, any>;
 export type AirtableRecord = {id: string; fields: FieldSet};
@@ -531,6 +583,8 @@ export type IAirtableService = {
 	createField(baseId: string, tableId: string, field: Field): Promise<Field & {id: string}>;
 	updateField(baseId: string, tableId: string, fieldId: string, updates: {name?: string | undefined; description?: string | undefined}): Promise<Field & {id: string}>;
 	searchRecords(baseId: string, tableId: string, searchTerm: string, fieldIds?: string[], maxRecords?: number, view?: string): Promise<AirtableRecord[]>;
+	createComment(baseId: string, tableId: string, recordId: string, text: string, parentCommentId?: string): Promise<Comment>;
+	listComments(baseId: string, tableId: string, recordId: string, pageSize?: number, offset?: string): Promise<ListCommentsResponse>;
 };
 
 export type IAirtableMCPServer = {
