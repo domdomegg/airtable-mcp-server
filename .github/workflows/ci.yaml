@@ -89,11 +89,19 @@ jobs:
         with:
           username: domdomegg
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: domdomegg/airtable-mcp-server
+          images: |
+            domdomegg/airtable-mcp-server
+            ghcr.io/${{ github.repository }}
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}

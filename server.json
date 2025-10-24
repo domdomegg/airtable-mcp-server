@@ -44,6 +44,23 @@
       }
     },
     {
+      "registry_type": "oci",
+      "identifier": "ghcr.io/philgwmurphy/airtable-mcp-server",
+      "version": "{{VERSION}}",
+      "runtime_hint": "docker",
+      "environment_variables": [
+        {
+          "name": "AIRTABLE_API_KEY",
+          "description": "Airtable personal access token (e.g., pat123.abc123). Create at https://airtable.com/create/tokens/new with scopes: schema.bases:read, data.records:read, and optionally schema.bases:write and data.records:write.",
+          "is_required": true,
+          "is_secret": true
+        }
+      ],
+      "transport": {
+        "type": "stdio"
+      }
+    },
+    {
       "registry_type": "mcpb",
       "identifier": "https://github.com/domdomegg/airtable-mcp-server/releases/download/v{{VERSION}}/airtable-mcp-server.mcpb",
       "version": "{{VERSION}}",
