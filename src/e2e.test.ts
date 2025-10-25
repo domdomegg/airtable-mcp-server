@@ -385,5 +385,43 @@ describe.each([
 				fields: expect.any(Array),
 			});
 		}, 30_000);
+
+		test('should list comments on a record', async () => {
+			const result = await client.sendRequest<CallToolResult>({
+				jsonrpc: '2.0',
+				id: '1',
+				method: 'tools/call',
+				params: {
+					name: 'list_comments',
+					arguments: {
+						baseId: 'appC81gYOrDE9H6jc',
+						tableId: 'tblya8yQZYB9HXrk6',
+						recordId: 'reciVGWpUyMQ6vX8o',
+					},
+				},
+			});
+
+			expect(result).toMatchObject({
+				content: [{
+					type: 'text',
+					text: expect.any(String),
+				}],
+			});
+
+			const response = JSON.parse(result.content[0]!.text as string);
+
+			expect(response).toMatchObject({
+				comments: expect.any(Array),
+			});
+
+			const {comments} = response;
+			expect(comments.length).toBeGreaterThan(0);
+			expect(comments[0]).toMatchObject({
+				id: expect.any(String),
+				text: expect.any(String),
+				createdTime: expect.any(String),
+			});
+			expect(comments[0].text).toContain('this is a test comment for the tests');
+		}, 30_000);
 	});
 });
