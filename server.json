@@ -27,9 +27,7 @@
     },
     {
       "registryType": "oci",
-      "identifier": "domdomegg/airtable-mcp-server",
-      "version": "{{VERSION}}",
-      "runtimeHint": "docker",
+      "identifier": "docker.io/domdomegg/airtable-mcp-server:{{VERSION}}",
       "environmentVariables": [
         {
           "name": "AIRTABLE_API_KEY",
