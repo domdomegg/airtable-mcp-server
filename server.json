@@ -1,7 +1,13 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.domdomegg/airtable-mcp-server",
+  "title": "Airtable",
   "description": "Read and write access to Airtable database schemas, tables, and records.",
+  "websiteUrl": "https://github.com/domdomegg/airtable-mcp-server#readme",
+  "icons": [{
+    "mimeType": "image/png",
+    "src": "https://raw.githubusercontent.com/domdomegg/airtable-mcp-server/refs/heads/master/icon.png"
+  }],
   "repository": {
     "url": "https://github.com/domdomegg/airtable-mcp-server.git",
     "source": "github"
