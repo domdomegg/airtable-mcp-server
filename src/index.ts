@@ -1,23 +1,20 @@
-#!/usr/bin/env node
+import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
+import {registerAll, type ToolContext} from './tools/index.js';
 
-import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
-import {AirtableService} from './airtableService.js';
-import {AirtableMCPServer} from './mcpServer.js';
+// Library exports
+export {AirtableService} from './airtableService.js';
+export type {IAirtableService} from './types.js';
+export {registerAll, type ToolContext} from './tools/index.js';
 
-const main = async () => {
-	const apiKey = process.argv.slice(2)[0];
-	if (apiKey) {
-		// Deprecation warning
-		console.warn('warning (airtable-mcp-server): Passing in an API key as a command-line argument is deprecated and may be removed in a future version. Instead, set the `AIRTABLE_API_KEY` environment variable. See https://github.com/domdomegg/airtable-mcp-server/blob/master/README.md#usage for an example with Claude Desktop.');
-	}
+export type ServerConfig = ToolContext;
 
-	const airtableService = new AirtableService(apiKey);
-	const server = new AirtableMCPServer(airtableService);
-	const transport = new StdioServerTransport();
-	await server.connect(transport);
-};
+export function createServer(config: ServerConfig): McpServer {
+	const server = new McpServer({
+		name: 'airtable-mcp-server',
+		version: '1.0.0',
+	});
 
-main().catch((error: unknown) => {
-	console.error(error);
-	process.exit(1);
-});
+	registerAll(server, config);
+
+	return server;
+}

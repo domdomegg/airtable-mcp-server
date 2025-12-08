@@ -5,11 +5,12 @@ import type {
 	JSONRPCMessage, JSONRPCRequest, JSONRPCResponse, Tool,
 } from '@modelcontextprotocol/sdk/types.js';
 import {InMemoryTransport} from '@modelcontextprotocol/sdk/inMemory.js';
+import type {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
 import type {IAirtableService} from './types.js';
-import {AirtableMCPServer} from './mcpServer.js';
+import {createServer} from './index.js';
 
 describe('AirtableMCPServer', () => {
-	let server: AirtableMCPServer;
+	let server: McpServer;
 	let mockAirtableService: IAirtableService;
 	let serverTransport: InMemoryTransport;
 	let clientTransport: InMemoryTransport;
@@ -106,74 +107,27 @@ describe('AirtableMCPServer', () => {
 		};
 
 		// Create server instance with test transport
-		server = new AirtableMCPServer(mockAirtableService);
+		server = createServer({airtableService: mockAirtableService});
 		[serverTransport, clientTransport] = InMemoryTransport.createLinkedPair();
 		await server.connect(serverTransport);
 	});
 
-	const sendRequest = async (message: JSONRPCRequest): Promise<JSONRPCResponse> => {
-		return new Promise((resolve, reject) => {
-			// Set up response handler
-			clientTransport.onmessage = (response: JSONRPCMessage) => {
-				resolve(response as JSONRPCResponse);
-			};
+	const sendRequest = async (message: JSONRPCRequest): Promise<JSONRPCResponse> => new Promise((resolve, reject) => {
+		// Set up response handler
+		clientTransport.onmessage = (response: JSONRPCMessage) => {
+			resolve(response as JSONRPCResponse);
+		};
 
-			clientTransport.onerror = (err: Error) => {
-				reject(err);
-			};
+		clientTransport.onerror = (err: Error) => {
+			reject(err);
+		};
 
-			clientTransport.send(message).catch((err: unknown) => {
-				reject(err instanceof Error ? err : new Error(String(err)));
-			});
+		clientTransport.send(message).catch((err: unknown) => {
+			reject(err instanceof Error ? err : new Error(String(err)));
 		});
-	};
+	});
 
 	describe('server functionality', () => {
-		test('handles list_resources request', async () => {
-			const response = await sendRequest({
-				jsonrpc: '2.0',
-				id: '1',
-				method: 'resources/list',
-				params: {},
-			});
-
-			expect(response.result).toEqual({
-				resources: [{
-					uri: 'airtable://base1/tbl1/schema',
-					mimeType: 'application/json',
-					name: 'Test Base: Test Table schema',
-					description: 'Table schemas from Airtable bases',
-				}],
-			});
-		});
-
-		test('handles read_resource request', async () => {
-			const response = await sendRequest({
-				jsonrpc: '2.0',
-				id: '1',
-				method: 'resources/read',
-				params: {
-					uri: 'airtable://base1/tbl1/schema',
-				},
-			});
-
-			expect(response.result).toEqual({
-				contents: [{
-					uri: 'airtable://base1/tbl1/schema',
-					mimeType: 'application/json',
-					text: JSON.stringify({
-						baseId: 'base1',
-						tableId: 'tbl1',
-						name: 'Test Table',
-						description: 'Test Description',
-						primaryFieldId: 'fld1',
-						fields: [],
-						views: [],
-					}),
-				}],
-			});
-		});
-
 		test('handles list_tools request', async () => {
 			const response = await sendRequest({
 				jsonrpc: '2.0',
@@ -182,9 +136,9 @@ describe('AirtableMCPServer', () => {
 				params: {},
 			});
 
-			expect((response.result.tools as Tool[]).length).toBeGreaterThanOrEqual(12);
+			expect((response.result.tools as Tool[]).length).toBe(15);
 			expect((response.result.tools as Tool[])[0]).toMatchObject({
-				name: 'list_records',
+				name: expect.any(String),
 				description: expect.any(String),
 				inputSchema: expect.objectContaining({
 					type: 'object',
@@ -210,10 +164,13 @@ describe('AirtableMCPServer', () => {
 			expect(response.result).toEqual({
 				content: [{
 					type: 'text',
-					text: JSON.stringify([
-						{id: 'rec1', fields: {name: 'Test Record'}},
-					]),
+					text: JSON.stringify({
+						records: [{id: 'rec1', fields: {name: 'Test Record'}}],
+					}, null, 2),
 				}],
+				structuredContent: {
+					records: [{id: 'rec1', fields: {name: 'Test Record'}}],
+				},
 			});
 		});
 
@@ -245,6 +202,21 @@ describe('AirtableMCPServer', () => {
 				content: [{
 					type: 'text',
 					text: JSON.stringify({
+						comment: {
+							id: 'com123',
+							createdTime: '2021-03-01T09:00:00.000Z',
+							lastUpdatedTime: null,
+							text: 'Test comment',
+							author: {
+								id: 'usr123',
+								email: 'test@example.com',
+								name: 'Test User',
+							},
+						},
+					}, null, 2),
+				}],
+				structuredContent: {
+					comment: {
 						id: 'com123',
 						createdTime: '2021-03-01T09:00:00.000Z',
 						lastUpdatedTime: null,
@@ -254,8 +226,8 @@ describe('AirtableMCPServer', () => {
 							email: 'test@example.com',
 							name: 'Test User',
 						},
-					}),
-				}],
+					},
+				},
 			});
 		});
 
@@ -287,8 +259,33 @@ describe('AirtableMCPServer', () => {
 			expect(response.result).toEqual({
 				content: [{
 					type: 'text',
-					text: expect.any(String),
+					text: JSON.stringify({
+						comment: {
+							id: 'com123',
+							createdTime: '2021-03-01T09:00:00.000Z',
+							lastUpdatedTime: null,
+							text: 'Test comment',
+							author: {
+								id: 'usr123',
+								email: 'test@example.com',
+								name: 'Test User',
+							},
+						},
+					}, null, 2),
 				}],
+				structuredContent: {
+					comment: {
+						id: 'com123',
+						createdTime: '2021-03-01T09:00:00.000Z',
+						lastUpdatedTime: null,
+						text: 'Test comment',
+						author: {
+							id: 'usr123',
+							email: 'test@example.com',
+							name: 'Test User',
+						},
+					},
+				},
 			});
 		});
 
@@ -319,22 +316,34 @@ describe('AirtableMCPServer', () => {
 				content: [{
 					type: 'text',
 					text: JSON.stringify({
-						comments: [
-							{
-								id: 'com123',
-								createdTime: '2021-03-01T09:00:00.000Z',
-								lastUpdatedTime: null,
-								text: 'Test comment',
-								author: {
-									id: 'usr123',
-									email: 'test@example.com',
-									name: 'Test User',
-								},
+						comments: [{
+							id: 'com123',
+							createdTime: '2021-03-01T09:00:00.000Z',
+							lastUpdatedTime: null,
+							text: 'Test comment',
+							author: {
+								id: 'usr123',
+								email: 'test@example.com',
+								name: 'Test User',
 							},
-						],
+						}],
 						offset: null,
-					}),
+					}, null, 2),
 				}],
+				structuredContent: {
+					comments: [{
+						id: 'com123',
+						createdTime: '2021-03-01T09:00:00.000Z',
+						lastUpdatedTime: null,
+						text: 'Test comment',
+						author: {
+							id: 'usr123',
+							email: 'test@example.com',
+							name: 'Test User',
+						},
+					}],
+					offset: null,
+				},
 			});
 		});
 
@@ -366,8 +375,35 @@ describe('AirtableMCPServer', () => {
 			expect(response.result).toEqual({
 				content: [{
 					type: 'text',
-					text: expect.any(String),
+					text: JSON.stringify({
+						comments: [{
+							id: 'com123',
+							createdTime: '2021-03-01T09:00:00.000Z',
+							lastUpdatedTime: null,
+							text: 'Test comment',
+							author: {
+								id: 'usr123',
+								email: 'test@example.com',
+								name: 'Test User',
+							},
+						}],
+						offset: null,
+					}, null, 2),
 				}],
+				structuredContent: {
+					comments: [{
+						id: 'com123',
+						createdTime: '2021-03-01T09:00:00.000Z',
+						lastUpdatedTime: null,
+						text: 'Test comment',
+						author: {
+							id: 'usr123',
+							email: 'test@example.com',
+							name: 'Test User',
+						},
+					}],
+					offset: null,
+				},
 			});
 		});
 	});

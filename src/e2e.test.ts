@@ -6,16 +6,14 @@ import type {
 	JSONRPCMessage,
 	JSONRPCRequest,
 	JSONRPCResponse,
-	ListResourcesResult,
 	ListToolsResult,
-	ReadResourceResult,
 } from '@modelcontextprotocol/sdk/types.js';
 import {InMemoryTransport} from '@modelcontextprotocol/sdk/inMemory.js';
 import {execSync, spawn} from 'node:child_process';
 import {existsSync} from 'node:fs';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import {AirtableMCPServer} from './mcpServer.js';
+import {createServer} from './index.js';
 import {AirtableService} from './airtableService.js';
 
 // Readonly API key for integration tests
@@ -110,7 +108,7 @@ describe.each([
 		condition: true,
 		async createClient(): Promise<MCPClient> {
 			const airtableService = new AirtableService(AIRTABLE_API_KEY);
-			const server = new AirtableMCPServer(airtableService);
+			const server = createServer({airtableService});
 			const [serverTransport, clientTransport] = InMemoryTransport.createLinkedPair();
 			await server.connect(serverTransport);
 
@@ -157,7 +155,7 @@ describe.each([
 			execSync(`mkdir -p ${testDir} && unzip -q airtable-mcp-server.mcpb -d ${testDir}`);
 
 			// Start the MCP server from the extracted MCP Bundle
-			const serverProcess = spawn('node', [path.join(testDir, 'dist/index.js')], {
+			const serverProcess = spawn('node', [path.join(testDir, 'dist/main.js')], {
 				stdio: ['pipe', 'pipe', 'pipe'],
 				env: {...process.env, AIRTABLE_API_KEY},
 			});
@@ -262,8 +260,9 @@ describe.each([
 				}],
 			});
 
-			const bases = JSON.parse(basesResult.content[0]!.text as string);
-			expect(Array.isArray(bases)).toBe(true);
+			const basesResponse = JSON.parse(basesResult.content[0]!.text as string);
+			expect(basesResponse).toMatchObject({bases: expect.any(Array)});
+			const {bases} = basesResponse;
 			expect(bases.length).toBeGreaterThan(0);
 			expect(bases[0]).toMatchObject({
 				id: expect.any(String),
@@ -293,8 +292,9 @@ describe.each([
 				}],
 			});
 
-			const tables = JSON.parse(tablesResult.content[0]!.text as string);
-			expect(Array.isArray(tables)).toBe(true);
+			const tablesResponse = JSON.parse(tablesResult.content[0]!.text as string);
+			expect(tablesResponse).toMatchObject({tables: expect.any(Array)});
+			const {tables} = tablesResponse;
 			if (tables.length > 0) {
 				expect(tables[0]).toMatchObject({
 					id: expect.any(String),
@@ -326,8 +326,9 @@ describe.each([
 					}],
 				});
 
-				const records = JSON.parse(recordsResult.content[0]!.text as string);
-				expect(Array.isArray(records)).toBe(true);
+				const recordsResponse = JSON.parse(recordsResult.content[0]!.text as string);
+				expect(recordsResponse).toMatchObject({records: expect.any(Array)});
+				const {records} = recordsResponse;
 				if (records.length > 0) {
 					expect(records[0]).toMatchObject({
 						id: expect.any(String),
@@ -337,53 +338,6 @@ describe.each([
 			} else {
 				console.warn('Skipping list_records test as no tables found');
 			}
-		}, 30_000);
-
-		test('should list and read resources', async () => {
-			// First list resources
-			const listResult = await client.sendRequest<ListResourcesResult>({
-				jsonrpc: '2.0',
-				id: '1',
-				method: 'resources/list',
-				params: {},
-			});
-
-			expect(listResult).toMatchObject({
-				resources: expect.any(Array),
-			});
-
-			if (listResult.resources.length === 0) {
-				console.warn('Skipping resource read test as no resources found');
-				return;
-			}
-
-			// Then read the first resource
-			const resource = listResult.resources[0]!;
-			const readResult = await client.sendRequest<ReadResourceResult>({
-				jsonrpc: '2.0',
-				id: '2',
-				method: 'resources/read',
-				params: {
-					uri: resource.uri,
-				},
-			});
-
-			expect(readResult).toMatchObject({
-				contents: [{
-					uri: resource.uri,
-					mimeType: 'application/json',
-					text: expect.any(String),
-				}],
-			});
-
-			const content = JSON.parse(readResult.contents[0]!.text as string);
-
-			expect(content).toMatchObject({
-				baseId: expect.any(String),
-				tableId: expect.any(String),
-				name: expect.any(String),
-				fields: expect.any(Array),
-			});
 		}, 30_000);
 
 		test('should list comments on a record', async () => {
