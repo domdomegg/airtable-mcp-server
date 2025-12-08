@@ -1,6 +1,5 @@
 import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {registerAll, type ToolContext} from './tools/index.js';
-import {registerResources} from './resources/index.js';
 
 export type ServerConfig = ToolContext;
 
@@ -11,7 +10,6 @@ export function createServer(config: ServerConfig): McpServer {
 	});
 
 	registerAll(server, config);
-	registerResources(server, config.airtableService);
 
 	return server;
 }

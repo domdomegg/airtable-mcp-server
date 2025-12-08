@@ -6,9 +6,7 @@ import type {
 	JSONRPCMessage,
 	JSONRPCRequest,
 	JSONRPCResponse,
-	ListResourcesResult,
 	ListToolsResult,
-	ReadResourceResult,
 } from '@modelcontextprotocol/sdk/types.js';
 import {InMemoryTransport} from '@modelcontextprotocol/sdk/inMemory.js';
 import {execSync, spawn} from 'node:child_process';
@@ -340,53 +338,6 @@ describe.each([
 			} else {
 				console.warn('Skipping list_records test as no tables found');
 			}
-		}, 30_000);
-
-		test('should list and read resources', async () => {
-			// First list resources
-			const listResult = await client.sendRequest<ListResourcesResult>({
-				jsonrpc: '2.0',
-				id: '1',
-				method: 'resources/list',
-				params: {},
-			});
-
-			expect(listResult).toMatchObject({
-				resources: expect.any(Array),
-			});
-
-			if (listResult.resources.length === 0) {
-				console.warn('Skipping resource read test as no resources found');
-				return;
-			}
-
-			// Then read the first resource
-			const resource = listResult.resources[0]!;
-			const readResult = await client.sendRequest<ReadResourceResult>({
-				jsonrpc: '2.0',
-				id: '2',
-				method: 'resources/read',
-				params: {
-					uri: resource.uri,
-				},
-			});
-
-			expect(readResult).toMatchObject({
-				contents: [{
-					uri: resource.uri,
-					mimeType: 'application/json',
-					text: expect.any(String),
-				}],
-			});
-
-			const content = JSON.parse(readResult.contents[0]!.text as string);
-
-			expect(content).toMatchObject({
-				baseId: expect.any(String),
-				tableId: expect.any(String),
-				name: expect.any(String),
-				fields: expect.any(Array),
-			});
 		}, 30_000);
 
 		test('should list comments on a record', async () => {
