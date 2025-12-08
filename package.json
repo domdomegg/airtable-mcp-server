@@ -1,6 +1,6 @@
 {
   "name": "airtable-mcp-server",
-  "version": "1.9.5",
+  "version": "1.9.6",
   "description": "A Model Context Protocol server that provides read and write access to Airtable databases. This server enables LLMs to inspect database schemas, then read and write records.",
   "license": "MIT",
   "author": "Adam Jones (domdomegg)",
