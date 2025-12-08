@@ -1,16 +1,27 @@
 #!/usr/bin/env node
 
+import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
+import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
+import {AirtableService} from './airtableService.js';
+import {registerAll, type ToolContext} from './tools/index.js';
+
 // Library exports
-export {createServer, type ServerConfig} from './server.js';
 export {AirtableService} from './airtableService.js';
 export type {IAirtableService} from './types.js';
 export {registerAll, type ToolContext} from './tools/index.js';
 
-// CLI entry point (for backwards compatibility with existing bin usage)
-// New installs should use main.ts via the bin field
-import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
-import {AirtableService} from './airtableService.js';
-import {createServer} from './server.js';
+export type ServerConfig = ToolContext;
+
+export function createServer(config: ServerConfig): McpServer {
+	const server = new McpServer({
+		name: 'airtable-mcp-server',
+		version: '1.9.5',
+	});
+
+	registerAll(server, config);
+
+	return server;
+}
 
 const main = async () => {
 	const apiKey = process.argv.slice(2)[0];

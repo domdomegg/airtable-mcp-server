@@ -4,7 +4,7 @@ import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
 import {StreamableHTTPServerTransport} from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import express from 'express';
 import {AirtableService} from './airtableService.js';
-import {createServer} from './server.js';
+import {createServer} from './index.js';
 
 function setupSignalHandlers(cleanup: () => Promise<void>): void {
 	process.on('SIGINT', async () => {

@@ -7,7 +7,7 @@ import type {
 import {InMemoryTransport} from '@modelcontextprotocol/sdk/inMemory.js';
 import type {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
 import type {IAirtableService} from './types.js';
-import {createServer} from './server.js';
+import {createServer} from './index.js';
 
 describe('AirtableMCPServer', () => {
 	let server: McpServer;

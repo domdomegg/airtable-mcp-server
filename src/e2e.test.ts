@@ -13,7 +13,7 @@ import {execSync, spawn} from 'node:child_process';
 import {existsSync} from 'node:fs';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import {createServer} from './server.js';
+import {createServer} from './index.js';
 import {AirtableService} from './airtableService.js';
 
 // Readonly API key for integration tests
