@@ -15,7 +15,7 @@ import {execSync, spawn} from 'node:child_process';
 import {existsSync} from 'node:fs';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import {AirtableMCPServer} from './mcpServer.js';
+import {createServer} from './server.js';
 import {AirtableService} from './airtableService.js';
 
 // Readonly API key for integration tests
@@ -110,7 +110,7 @@ describe.each([
 		condition: true,
 		async createClient(): Promise<MCPClient> {
 			const airtableService = new AirtableService(AIRTABLE_API_KEY);
-			const server = new AirtableMCPServer(airtableService);
+			const server = createServer({airtableService});
 			const [serverTransport, clientTransport] = InMemoryTransport.createLinkedPair();
 			await server.connect(serverTransport);
 
@@ -262,8 +262,9 @@ describe.each([
 				}],
 			});
 
-			const bases = JSON.parse(basesResult.content[0]!.text as string);
-			expect(Array.isArray(bases)).toBe(true);
+			const basesResponse = JSON.parse(basesResult.content[0]!.text as string);
+			expect(basesResponse).toMatchObject({bases: expect.any(Array)});
+			const {bases} = basesResponse;
 			expect(bases.length).toBeGreaterThan(0);
 			expect(bases[0]).toMatchObject({
 				id: expect.any(String),
@@ -293,8 +294,9 @@ describe.each([
 				}],
 			});
 
-			const tables = JSON.parse(tablesResult.content[0]!.text as string);
-			expect(Array.isArray(tables)).toBe(true);
+			const tablesResponse = JSON.parse(tablesResult.content[0]!.text as string);
+			expect(tablesResponse).toMatchObject({tables: expect.any(Array)});
+			const {tables} = tablesResponse;
 			if (tables.length > 0) {
 				expect(tables[0]).toMatchObject({
 					id: expect.any(String),
@@ -326,8 +328,9 @@ describe.each([
 					}],
 				});
 
-				const records = JSON.parse(recordsResult.content[0]!.text as string);
-				expect(Array.isArray(records)).toBe(true);
+				const recordsResponse = JSON.parse(recordsResult.content[0]!.text as string);
+				expect(recordsResponse).toMatchObject({records: expect.any(Array)});
+				const {records} = recordsResponse;
 				if (records.length > 0) {
 					expect(records[0]).toMatchObject({
 						id: expect.any(String),

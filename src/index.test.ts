@@ -1,12 +1,14 @@
 import {
 	describe, test, expect, vi, beforeEach, afterEach,
-	type Mock,
 } from 'vitest';
+import type {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
-import {AirtableMCPServer} from './mcpServer.js';
+import * as serverModule from './server.js';
 
-// Mock the required modules
-vi.mock('./mcpServer.js');
+// Mock the server module
+vi.mock('./server.js', () => ({
+	createServer: vi.fn(),
+}));
 
 describe('Main Application', () => {
 	// Save original argv
@@ -48,15 +50,15 @@ describe('Main Application', () => {
 
 		// Mock the connect method
 		const mockConnect = vi.fn();
-		(AirtableMCPServer as Mock).mockImplementation(() => ({
+		vi.mocked(serverModule.createServer).mockReturnValue({
 			connect: mockConnect,
-		}));
+		} as unknown as McpServer);
 
 		// Import and execute main
 		await import('./index.js');
 
 		// Verify service creation and connection
-		expect(AirtableMCPServer).toHaveBeenCalled();
+		expect(serverModule.createServer).toHaveBeenCalled();
 		expect(mockConnect.mock.calls[0][0]).toBeInstanceOf(StdioServerTransport);
 	});
 
@@ -67,15 +69,15 @@ describe('Main Application', () => {
 
 		// Mock the connect method
 		const mockConnect = vi.fn();
-		(AirtableMCPServer as Mock).mockImplementation(() => ({
+		vi.mocked(serverModule.createServer).mockReturnValue({
 			connect: mockConnect,
-		}));
+		} as unknown as McpServer);
 
 		// Import and execute main
 		await import('./index.js');
 
 		// Verify service creation and connection
-		expect(AirtableMCPServer).toHaveBeenCalled();
+		expect(serverModule.createServer).toHaveBeenCalled();
 		expect(mockConnect.mock.calls[0][0]).toBeInstanceOf(StdioServerTransport);
 	});
 

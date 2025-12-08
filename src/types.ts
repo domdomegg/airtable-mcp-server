@@ -13,14 +13,14 @@ export const ListBasesResponseSchema = z.object({
 	offset: z.string().optional(),
 });
 
-export const FieldOptionsSchema = z.object({
+export const FieldOptionsSchema = z.looseObject({
 	isReversed: z.boolean().optional(),
 	inverseLinkFieldId: z.string().optional(),
 	linkedTableId: z.string().optional(),
 	prefersSingleRecordLink: z.boolean().optional(),
 	color: z.string().optional(),
 	icon: z.string().optional(),
-}).passthrough();
+});
 
 export const FieldSchema = z.object({
 	name: z.string(),
@@ -336,11 +336,11 @@ export const FieldSchema = z.object({
 		type: z.literal('multipleSelects'),
 	}),
 	z.object({
-		options: z.record(z.any()).optional(),
+		options: z.record(z.string(), z.any()).optional(),
 		type: z.literal('singleCollaborator'),
 	}),
 	z.object({
-		options: z.record(z.any()).optional(),
+		options: z.record(z.string(), z.any()).optional(),
 		type: z.literal('multipleCollaborators'),
 	}),
 	z.object({
@@ -451,7 +451,7 @@ export const GetRecordArgsSchema = z.object({
 export const CreateRecordArgsSchema = z.object({
 	baseId: z.string(),
 	tableId: z.string(),
-	fields: z.record(z.any()),
+	fields: z.record(z.string(), z.any()),
 });
 
 export const UpdateRecordsArgsSchema = z.object({
@@ -459,7 +459,7 @@ export const UpdateRecordsArgsSchema = z.object({
 	tableId: z.string(),
 	records: z.array(z.object({
 		id: z.string(),
-		fields: z.record(z.any()),
+		fields: z.record(z.string(), z.any()),
 	})),
 });
 
@@ -527,7 +527,7 @@ export const CommentSchema = z.object({
 	text: z.string().describe('The comment text'),
 	author: CommentAuthorSchema,
 	parentCommentId: z.string().optional().describe('The comment ID of the parent comment, if this is a threaded reply'),
-	mentioned: z.record(z.any()).optional().describe('User mentions in the comment'),
+	mentioned: z.record(z.string(), z.any()).optional().describe('User mentions in the comment'),
 	reactions: z.array(CommentReactionSchema).optional().describe('List of reactions on this comment'),
 });
 

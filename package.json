@@ -14,10 +14,11 @@
   "files": [
     "dist"
   ],
-  "bin": "dist/index.js",
+  "bin": "dist/main.js",
   "mcpName": "io.github.domdomegg/airtable-mcp-server",
   "scripts": {
-    "start": "npm run build && node ./dist/index.js",
+    "start": "npm run build && node ./dist/main.js",
+    "start:http": "npm run build && MCP_TRANSPORT=http node ./dist/main.js",
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "lint": "eslint",
@@ -28,18 +29,20 @@
     "prepublishOnly": "npm run clean && npm run build"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.1",
-    "zod": "^3.24.1",
-    "zod-to-json-schema": "^3.24.1"
+    "@modelcontextprotocol/sdk": "^1.24.3",
+    "express": "^5.1.0",
+    "zod": "^4.1.13",
+    "zod-to-json-schema": "^3.25.0"
   },
   "devDependencies": {
-    "@tsconfig/node-lts": "^22.0.2",
-    "@types/node": "^22.10.2",
-    "eslint": "^9.32.0",
+    "@tsconfig/node-lts": "^24.0.0",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.10.1",
+    "eslint": "^9.39.1",
     "eslint-config-domdomegg": "^2.0.9",
-    "nodemon": "^3.1.7",
+    "nodemon": "^3.1.11",
     "tsconfig-domdomegg": "^1.0.0",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
   }
 }
