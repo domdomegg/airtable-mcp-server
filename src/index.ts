@@ -11,7 +11,7 @@ export type ServerConfig = ToolContext;
 export function createServer(config: ServerConfig): McpServer {
 	const server = new McpServer({
 		name: 'airtable-mcp-server',
-		version: '1.9.5',
+		version: '1.0.0',
 	});
 
 	registerAll(server, config);
