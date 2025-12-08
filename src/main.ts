@@ -32,6 +32,7 @@ if (transport === 'stdio') {
 
 	const httpTransport = new StreamableHTTPServerTransport({
 		sessionIdGenerator: undefined,
+		enableJsonResponse: true,
 	});
 
 	app.post('/mcp', async (req, res) => {
