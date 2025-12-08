@@ -241,19 +241,15 @@ Create either a global (`~/.cursor/mcp.json`) or project-specific (`.cursor/mcp.
   - Returns comments array with author, text, timestamps, reactions, and mentions
   - Comments are returned from newest to oldest
 
-### Resources
+### HTTP Transport
 
-The server provides schema information for Airtable bases and tables:
+The server can also run in HTTP mode for use with remote MCP clients:
 
-- **Table Schemas** (`airtable://<baseId>/<tableId>/schema`)
-  - JSON schema information for each table
-  - Includes:
-    - Base id and table id
-    - Table name and description
-    - Primary field ID
-    - Field definitions (ID, name, type, description, options)
-    - View definitions (ID, name, type)
-  - Automatically discovered from Airtable's metadata API
+```bash
+MCP_TRANSPORT=http PORT=3000 npx airtable-mcp-server
+```
+
+This starts a stateless HTTP server at `http://localhost:3000/mcp`. Note: HTTP transport has no built-in authentication - only use behind a reverse proxy or in a secured environment.
 
 ## Contributing
 
