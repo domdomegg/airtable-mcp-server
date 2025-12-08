@@ -155,7 +155,7 @@ describe.each([
 			execSync(`mkdir -p ${testDir} && unzip -q airtable-mcp-server.mcpb -d ${testDir}`);
 
 			// Start the MCP server from the extracted MCP Bundle
-			const serverProcess = spawn('node', [path.join(testDir, 'dist/index.js')], {
+			const serverProcess = spawn('node', [path.join(testDir, 'dist/main.js')], {
 				stdio: ['pipe', 'pipe', 'pipe'],
 				env: {...process.env, AIRTABLE_API_KEY},
 			});

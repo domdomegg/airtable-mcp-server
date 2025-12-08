@@ -32,4 +32,4 @@ COPY --from=builder /app/package.json /app/package.json
 COPY --from=builder /app/node_modules /app/node_modules
 
 # Set the entry point to run the server
-ENTRYPOINT ["node", "dist/index.js"]
+ENTRYPOINT ["node", "dist/main.js"]
