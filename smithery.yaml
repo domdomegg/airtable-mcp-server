@@ -14,4 +14,4 @@ startCommand:
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
-    (config) => ({command: 'node', args: ['dist/index.js'], env: {AIRTABLE_API_KEY: config.airtableApiKey}})
+    (config) => ({command: 'node', args: ['dist/main.js'], env: {AIRTABLE_API_KEY: config.airtableApiKey}})
