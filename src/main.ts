@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import type {Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
 import {StreamableHTTPServerTransport} from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import express from 'express';
@@ -38,6 +37,7 @@ function setupSignalHandlers(cleanup: () => Promise<void>): void {
 		app.use(express.json());
 
 		const httpTransport = new StreamableHTTPServerTransport({
+			sessionIdGenerator: undefined,
 			enableJsonResponse: true,
 		});
 
@@ -45,8 +45,7 @@ function setupSignalHandlers(cleanup: () => Promise<void>): void {
 			await httpTransport.handleRequest(req, res, req.body);
 		});
 
-		// Type assertion needed: SDK types aren't fully compatible with exactOptionalPropertyTypes
-		await server.connect(httpTransport as Transport);
+		await server.connect(httpTransport);
 
 		const port = parseInt(process.env.PORT || '3000', 10);
 		const httpServer = app.listen(port, () => {
