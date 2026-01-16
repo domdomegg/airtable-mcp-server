@@ -33,6 +33,7 @@ export function registerCreateComment(server: McpServer, ctx: ToolContext): void
 			outputSchema,
 			annotations: {
 				readOnlyHint: false,
+				destructiveHint: false,
 			},
 		},
 		async (args) => {
