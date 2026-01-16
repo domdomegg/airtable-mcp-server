@@ -27,6 +27,7 @@ export function registerUpdateRecords(server: McpServer, ctx: ToolContext): void
 			outputSchema,
 			annotations: {
 				readOnlyHint: false,
+				destructiveHint: true,
 			},
 		},
 		async (args) => {
