@@ -585,6 +585,14 @@ export type IAirtableService = {
 	searchRecords(baseId: string, tableId: string, searchTerm: string, fieldIds?: string[], maxRecords?: number, view?: string): Promise<AirtableRecord[]>;
 	createComment(baseId: string, tableId: string, recordId: string, text: string, parentCommentId?: string): Promise<Comment>;
 	listComments(baseId: string, tableId: string, recordId: string, pageSize?: number, offset?: string): Promise<ListCommentsResponse>;
+	uploadAttachment(
+		baseId: string,
+		recordId: string,
+		attachmentFieldIdOrName: string,
+		file: string,
+		filename: string,
+		contentType: string,
+	): Promise<AirtableRecord>;
 };
 
 export type IAirtableMCPServer = {

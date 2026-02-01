@@ -263,6 +263,29 @@ export class AirtableService implements IAirtableService {
 		return this.fetchFromAPI(endpoint, ListCommentsResponseSchema);
 	}
 
+	async uploadAttachment(
+		baseId: string,
+		recordId: string,
+		attachmentFieldIdOrName: string,
+		file: string,
+		filename: string,
+		contentType: string,
+	): Promise<AirtableRecord> {
+		const contentBaseUrl = 'https://content.airtable.com';
+		const endpoint = `/v0/${baseId}/${recordId}/${encodeURIComponent(attachmentFieldIdOrName)}/uploadAttachment`;
+		const recordSchema = z.object({id: z.string(), fields: z.record(z.string(), z.any())});
+
+		return this.fetchFromAPI(
+			endpoint,
+			recordSchema,
+			{
+				method: 'POST',
+				body: JSON.stringify({contentType, file, filename}),
+			},
+			contentBaseUrl,
+		);
+	}
+
 	private async validateAndGetSearchFields(
 		baseId: string,
 		tableId: string,
@@ -305,8 +328,14 @@ export class AirtableService implements IAirtableService {
 		return searchableFields;
 	}
 
-	private async fetchFromAPI<T>(endpoint: string, schema: z.ZodType<T>, options: RequestInit = {}): Promise<T> {
-		const response = await this.fetch(`${this.baseUrl}${endpoint}`, {
+	private async fetchFromAPI<T>(
+		endpoint: string,
+		schema: z.ZodType<T>,
+		options: RequestInit = {},
+		baseUrl?: string,
+	): Promise<T> {
+		const url = (baseUrl ?? this.baseUrl) + endpoint;
+		const response = await this.fetch(url, {
 			...options,
 			headers: {
 				Authorization: `Bearer ${this.apiKey}`,

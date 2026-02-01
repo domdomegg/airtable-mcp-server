@@ -15,6 +15,7 @@ import {registerCreateField} from './create-field.js';
 import {registerUpdateField} from './update-field.js';
 import {registerCreateComment} from './create-comment.js';
 import {registerListComments} from './list-comments.js';
+import {registerUploadAttachment} from './upload-attachment.js';
 
 export type {ToolContext} from './types.js';
 
@@ -34,4 +35,5 @@ export function registerAll(server: McpServer, ctx: ToolContext): void {
 	registerUpdateField(server, ctx);
 	registerCreateComment(server, ctx);
 	registerListComments(server, ctx);
+	registerUploadAttachment(server, ctx);
 }
