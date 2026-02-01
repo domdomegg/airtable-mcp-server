@@ -231,6 +231,7 @@ describe.each([
 				'update_field',
 				'create_comment',
 				'list_comments',
+				'upload_attachment',
 			]);
 			expect(result.tools[0]).toMatchObject({
 				name: 'list_records',
