@@ -122,3 +122,10 @@ build/
 dist/
 server/
 airtable-mcp-server.mcpb
+
+# Python
+python/.venv/
+python/__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
