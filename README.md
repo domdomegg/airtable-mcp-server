@@ -253,7 +253,7 @@ This starts a stateless HTTP server at `http://localhost:3000/mcp`. Note: HTTP t
 
 ## Contributing
 
-Pull requests are welcomed on GitHub! To get started:
+Pull requests are welcomed on GitHub! CI runs secret detection (gitleaks)—do not commit secrets or API keys. To get started:
 
 1. Install Git and Node.js
 2. Clone the repository

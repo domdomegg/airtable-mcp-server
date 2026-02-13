@@ -48,6 +48,19 @@ jobs:
           name: airtable-mcp-server-mcpb
           path: .github/tmp/*
 
+  gitleaks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout ${{ github.sha }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   deploy:
     if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push'
     needs: ci

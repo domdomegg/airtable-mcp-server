@@ -1,0 +1,11 @@
+# Extend default gitleaks rules and allowlist known test assets
+title = "airtable-mcp-server gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "E2E test file with readonly Airtable token for integration tests"
+paths = [
+  '''src/e2e\.test\.ts''',
+]
