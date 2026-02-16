@@ -561,7 +561,8 @@ export type Comment = z.infer<typeof CommentSchema>;
 export type ListCommentsResponse = z.infer<typeof ListCommentsResponseSchema>;
 
 export type FieldSet = Record<string, any>;
-export type AirtableRecord = {id: string; fields: FieldSet};
+export const AirtableRecordSchema = z.object({id: z.string(), fields: z.record(z.string(), z.any())});
+export type AirtableRecord = z.infer<typeof AirtableRecordSchema>;
 
 export type ListRecordsOptions = {
 	view?: z.infer<typeof ListRecordsArgsSchema.shape.view>;

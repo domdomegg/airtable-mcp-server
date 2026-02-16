@@ -15,6 +15,7 @@ import {
 	FieldSchema,
 	CommentSchema,
 	ListCommentsResponseSchema,
+	AirtableRecordSchema,
 	type FieldSet,
 } from './types.js';
 import {enhanceAirtableError} from './enhanceAirtableError.js';
@@ -84,7 +85,7 @@ export class AirtableService implements IAirtableService {
 			const response = await this.fetchFromAPI(
 				`/v0/${baseId}/${tableId}?${queryParams.toString()}`,
 				z.object({
-					records: z.array(z.object({id: z.string(), fields: z.record(z.string(), z.any())})),
+					records: z.array(AirtableRecordSchema),
 					offset: z.string().optional(),
 				}),
 			);
@@ -99,14 +100,14 @@ export class AirtableService implements IAirtableService {
 	async getRecord(baseId: string, tableId: string, recordId: string): Promise<AirtableRecord> {
 		return this.fetchFromAPI(
 			`/v0/${baseId}/${tableId}/${recordId}`,
-			z.object({id: z.string(), fields: z.record(z.string(), z.any())}),
+			AirtableRecordSchema,
 		);
 	}
 
 	async createRecord(baseId: string, tableId: string, fields: FieldSet): Promise<AirtableRecord> {
 		return this.fetchFromAPI(
 			`/v0/${baseId}/${tableId}`,
-			z.object({id: z.string(), fields: z.record(z.string(), z.any())}),
+			AirtableRecordSchema,
 			{
 				method: 'POST',
 				body: JSON.stringify({fields}),
@@ -121,7 +122,7 @@ export class AirtableService implements IAirtableService {
 	): Promise<AirtableRecord[]> {
 		const response = await this.fetchFromAPI(
 			`/v0/${baseId}/${tableId}`,
-			z.object({records: z.array(z.object({id: z.string(), fields: z.record(z.string(), z.any())}))}),
+			z.object({records: z.array(AirtableRecordSchema)}),
 			{
 				method: 'PATCH',
 				body: JSON.stringify({records}),
@@ -273,11 +274,9 @@ export class AirtableService implements IAirtableService {
 	): Promise<AirtableRecord> {
 		const contentBaseUrl = 'https://content.airtable.com';
 		const endpoint = `/v0/${baseId}/${recordId}/${encodeURIComponent(attachmentFieldIdOrName)}/uploadAttachment`;
-		const recordSchema = z.object({id: z.string(), fields: z.record(z.string(), z.any())});
-
 		return this.fetchFromAPI(
 			endpoint,
-			recordSchema,
+			AirtableRecordSchema,
 			{
 				method: 'POST',
 				body: JSON.stringify({contentType, file, filename}),

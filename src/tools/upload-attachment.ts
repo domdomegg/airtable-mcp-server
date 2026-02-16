@@ -3,11 +3,9 @@ import {z} from 'zod';
 import type {ToolContext} from './types.js';
 import {baseId} from './schemas.js';
 import {jsonResult} from '../utils/response.js';
+import {AirtableRecordSchema} from '../types.js';
 
-const outputSchema = z.object({
-	id: z.string(),
-	fields: z.record(z.string(), z.unknown()),
-});
+const outputSchema = AirtableRecordSchema;
 
 export function registerUploadAttachment(server: McpServer, ctx: ToolContext): void {
 	server.registerTool(
@@ -22,7 +20,7 @@ export function registerUploadAttachment(server: McpServer, ctx: ToolContext): v
 				attachmentFieldIdOrName: z
 					.string()
 					.describe('The ID or name of the attachment field (e.g. fldXXXXXXXXXXXXXX or "Images")'),
-				file: z.string().describe('Base64-encoded file content'),
+				file: z.string().describe('Raw base64-encoded file content (no data URL prefix)'),
 				filename: z.string().describe('Filename for the attachment (e.g. "image.jpg")'),
 				contentType: z
 					.string()
