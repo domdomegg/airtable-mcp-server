@@ -110,7 +110,7 @@ export class AirtableService implements IAirtableService {
 			AirtableRecordSchema,
 			{
 				method: 'POST',
-				body: JSON.stringify({fields}),
+				body: JSON.stringify({fields, typecast: true}),
 			},
 		);
 	}
@@ -125,7 +125,7 @@ export class AirtableService implements IAirtableService {
 			z.object({records: z.array(AirtableRecordSchema)}),
 			{
 				method: 'PATCH',
-				body: JSON.stringify({records}),
+				body: JSON.stringify({records, typecast: true}),
 			},
 		);
 		return response.records;
