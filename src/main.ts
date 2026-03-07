@@ -34,7 +34,7 @@ function setupSignalHandlers(cleanup: () => Promise<void>): void {
 		await server.connect(stdioTransport);
 	} else if (transport === 'http') {
 		const app = express();
-		app.use(express.json());
+		app.use(express.json({limit: '20mb'}));
 
 		const httpTransport = new StreamableHTTPServerTransport({
 			sessionIdGenerator: undefined,
