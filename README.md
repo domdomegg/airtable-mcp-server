@@ -4,6 +4,10 @@ A Model Context Protocol server that provides read and write access to Airtable 
 
 https://github.com/user-attachments/assets/c8285e76-d0ed-4018-94c7-20535db6c944
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/domdomegg-airtable-mcp-server).
+
 ## Installation
 
 **Step 1**: [Create an Airtable personal access token by clicking here](https://airtable.com/create/tokens/new). Details:
