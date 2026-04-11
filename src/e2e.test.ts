@@ -16,7 +16,8 @@ import * as path from 'node:path';
 import {createServer} from './index.js';
 import {AirtableService} from './airtableService.js';
 
-// Readonly API key for integration tests
+// Deliberately committed readonly PAT, scoped to a single dummy table on a personal
+// Airtable account with only public test data. Not a leaked secret.
 const AIRTABLE_API_KEY = 'patDAZ0YDQu7LqGSy.f4736bbdec6ea0cb8ba8b5dba80c53f8b80e46d78a046a1769e749596671e677';
 
 type MCPClient = {
