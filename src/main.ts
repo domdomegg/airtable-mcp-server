@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
-import {StreamableHTTPServerTransport} from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import {StreamableHTTPServerTransport, type StreamableHTTPServerTransportOptions} from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import type {Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
 import express from 'express';
 import {AirtableService} from './airtableService.js';
 import {createServer} from './index.js';
@@ -36,16 +37,17 @@ function setupSignalHandlers(cleanup: () => Promise<void>): void {
 		const app = express();
 		app.use(express.json({limit: '20mb'}));
 
-		const httpTransport = new StreamableHTTPServerTransport({
+		const httpTransportOptions = {
 			sessionIdGenerator: undefined,
 			enableJsonResponse: true,
-		});
+		} as unknown as StreamableHTTPServerTransportOptions;
+		const httpTransport = new StreamableHTTPServerTransport(httpTransportOptions);
 
 		app.post('/mcp', async (req, res) => {
 			await httpTransport.handleRequest(req, res, req.body);
 		});
 
-		await server.connect(httpTransport);
+		await server.connect(httpTransport as unknown as Transport);
 
 		const port = parseInt(process.env.PORT || '3000', 10);
 		const httpServer = app.listen(port, () => {
