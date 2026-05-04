@@ -1,5 +1,5 @@
 import {
-	describe, test, expect, beforeEach, afterEach,
+	describe, test, expect, beforeEach, afterEach, beforeAll, afterAll,
 } from 'vitest';
 import type {
 	CallToolResult,
@@ -9,6 +9,8 @@ import type {
 	ListToolsResult,
 } from '@modelcontextprotocol/sdk/types.js';
 import {InMemoryTransport} from '@modelcontextprotocol/sdk/inMemory.js';
+import {Client} from '@modelcontextprotocol/sdk/client/index.js';
+import {StreamableHTTPClientTransport} from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import {execSync, spawn} from 'node:child_process';
 import {existsSync} from 'node:fs';
 import * as fs from 'node:fs';
@@ -380,4 +382,117 @@ describe.each([
 			expect(comments[0].text).toContain('this is a test comment for the tests');
 		}, 30_000);
 	});
+});
+
+describe('HTTP transport stateless mode', () => {
+	let serverProcess: ReturnType<typeof spawn>;
+	const port = 39871;
+	const baseUrl = `http://localhost:${port}/mcp`;
+
+	beforeAll(async () => {
+		if (!existsSync('dist/main.js')) {
+			execSync('npm run build', {stdio: 'inherit'});
+		}
+
+		serverProcess = spawn('node', ['dist/main.js'], {
+			stdio: ['pipe', 'pipe', 'pipe'],
+			env: {
+				...process.env,
+				MCP_TRANSPORT: 'http',
+				PORT: String(port),
+				AIRTABLE_API_KEY,
+			},
+		});
+
+		await new Promise<void>((resolve, reject) => {
+			const timer = setTimeout(() => {
+				reject(new Error('HTTP server did not start in time'));
+			}, 10_000);
+			serverProcess.stderr?.on('data', (data: Buffer) => {
+				if (data.toString().includes(`http://localhost:${port}/mcp`)) {
+					clearTimeout(timer);
+					resolve();
+				}
+			});
+			serverProcess.on('error', reject);
+		});
+	}, 30_000);
+
+	afterAll(async () => {
+		if (serverProcess && !serverProcess.killed) {
+			serverProcess.kill();
+			await new Promise<void>((resolve) => {
+				serverProcess.on('exit', () => {
+					resolve();
+				});
+			});
+		}
+	});
+
+	test('initialize must not return an mcp-session-id header', async () => {
+		const res = await fetch(baseUrl, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/json',
+				accept: 'application/json, text/event-stream',
+			},
+			body: JSON.stringify({
+				jsonrpc: '2.0',
+				id: 1,
+				method: 'initialize',
+				params: {
+					protocolVersion: '2024-11-05',
+					capabilities: {},
+					clientInfo: {name: 'test', version: '0.0.0'},
+				},
+			}),
+		});
+
+		expect(res.status).toBe(200);
+		// sessionIdGenerator: undefined puts the transport in stateless mode, so the
+		// SDK must not assign a session ID. If this header appears, the transport
+		// has been flipped to stateful and clients will need to track session IDs.
+		expect(res.headers.get('mcp-session-id')).toBeNull();
+	}, 15_000);
+
+	const withClient = async <T>(fn: (client: Client) => Promise<T>): Promise<T> => {
+		const client = new Client({name: 'test-http', version: '0.0.0'});
+		await client.connect(new StreamableHTTPClientTransport(new URL(baseUrl)));
+		try {
+			return await fn(client);
+		} finally {
+			await client.close();
+		}
+	};
+
+	test('lists tools over HTTP', async () => {
+		const result = await withClient(async (c) => c.listTools());
+		expect(result.tools.map((t) => t.name)).toContain('list_bases');
+	}, 15_000);
+
+	test('reads bases, tables, and records over HTTP', async () => {
+		await withClient(async (client) => {
+			const basesResult = await client.callTool({name: 'list_bases', arguments: {}});
+			const basesContent = basesResult.content as {type: string; text: string}[];
+			expect(basesContent[0]).toMatchObject({type: 'text', text: expect.any(String)});
+			const {bases} = JSON.parse(basesContent[0]!.text);
+			expect(bases.length).toBeGreaterThan(0);
+			const baseId = bases[0].id;
+
+			const tablesResult = await client.callTool({name: 'list_tables', arguments: {baseId}});
+			const tablesContent = tablesResult.content as {type: string; text: string}[];
+			const {tables} = JSON.parse(tablesContent[0]!.text);
+			expect(Array.isArray(tables)).toBe(true);
+
+			if (tables.length > 0) {
+				const recordsResult = await client.callTool({
+					name: 'list_records',
+					arguments: {baseId, tableId: tables[0].id, maxRecords: 5},
+				});
+				const recordsContent = recordsResult.content as {type: string; text: string}[];
+				const {records} = JSON.parse(recordsContent[0]!.text);
+				expect(Array.isArray(records)).toBe(true);
+			}
+		});
+	}, 30_000);
 });
