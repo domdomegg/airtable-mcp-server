@@ -399,12 +399,14 @@ describe('HTTP transport stateless mode', () => {
 				...process.env,
 				MCP_TRANSPORT: 'http',
 				PORT: String(port),
-				AIRTABLE_API_KEY: AIRTABLE_API_KEY,
+				AIRTABLE_API_KEY,
 			},
 		});
 
 		await new Promise<void>((resolve, reject) => {
-			const timer = setTimeout(() => reject(new Error('HTTP server did not start in time')), 10_000);
+			const timer = setTimeout(() => {
+				reject(new Error('HTTP server did not start in time'));
+			}, 10_000);
 			serverProcess.stderr?.on('data', (data: Buffer) => {
 				if (data.toString().includes(`http://localhost:${port}/mcp`)) {
 					clearTimeout(timer);
@@ -419,7 +421,9 @@ describe('HTTP transport stateless mode', () => {
 		if (serverProcess && !serverProcess.killed) {
 			serverProcess.kill();
 			await new Promise<void>((resolve) => {
-				serverProcess.on('exit', () => resolve());
+				serverProcess.on('exit', () => {
+					resolve();
+				});
 			});
 		}
 	});
@@ -461,21 +465,21 @@ describe('HTTP transport stateless mode', () => {
 	};
 
 	test('lists tools over HTTP', async () => {
-		const result = await withClient((c) => c.listTools());
+		const result = await withClient(async (c) => c.listTools());
 		expect(result.tools.map((t) => t.name)).toContain('list_bases');
 	}, 15_000);
 
 	test('reads bases, tables, and records over HTTP', async () => {
 		await withClient(async (client) => {
 			const basesResult = await client.callTool({name: 'list_bases', arguments: {}});
-			const basesContent = basesResult.content as Array<{type: string; text: string}>;
+			const basesContent = basesResult.content as {type: string; text: string}[];
 			expect(basesContent[0]).toMatchObject({type: 'text', text: expect.any(String)});
 			const {bases} = JSON.parse(basesContent[0]!.text);
 			expect(bases.length).toBeGreaterThan(0);
 			const baseId = bases[0].id;
 
 			const tablesResult = await client.callTool({name: 'list_tables', arguments: {baseId}});
-			const tablesContent = tablesResult.content as Array<{type: string; text: string}>;
+			const tablesContent = tablesResult.content as {type: string; text: string}[];
 			const {tables} = JSON.parse(tablesContent[0]!.text);
 			expect(Array.isArray(tables)).toBe(true);
 
@@ -484,7 +488,7 @@ describe('HTTP transport stateless mode', () => {
 					name: 'list_records',
 					arguments: {baseId, tableId: tables[0].id, maxRecords: 5},
 				});
-				const recordsContent = recordsResult.content as Array<{type: string; text: string}>;
+				const recordsContent = recordsResult.content as {type: string; text: string}[];
 				const {records} = JSON.parse(recordsContent[0]!.text);
 				expect(Array.isArray(records)).toBe(true);
 			}
