@@ -25,9 +25,9 @@ function setupSignalHandlers(cleanup: () => Promise<void>): void {
 
 	const transport = process.env.MCP_TRANSPORT || 'stdio';
 	const airtableService = new AirtableService(apiKey);
-	const server = createServer({airtableService});
 
 	if (transport === 'stdio') {
+		const server = createServer({airtableService});
 		setupSignalHandlers(async () => server.close());
 
 		const stdioTransport = new StdioServerTransport();
@@ -36,16 +36,19 @@ function setupSignalHandlers(cleanup: () => Promise<void>): void {
 		const app = express();
 		app.use(express.json({limit: '20mb'}));
 
-		const httpTransport = new StreamableHTTPServerTransport({
-			sessionIdGenerator: undefined,
-			enableJsonResponse: true,
-		});
-
+		// Stateless: fresh server + transport per request — sharing either misroutes responses on concurrent requests with colliding JSON-RPC IDs (GHSA-345p-7cg4-v4c7).
 		app.post('/mcp', async (req, res) => {
+			const server = createServer({airtableService});
+			const httpTransport = new StreamableHTTPServerTransport({
+				sessionIdGenerator: undefined,
+				enableJsonResponse: true,
+			});
+			res.on('close', () => {
+				void server.close();
+			});
+			await server.connect(httpTransport);
 			await httpTransport.handleRequest(req, res, req.body);
 		});
-
-		await server.connect(httpTransport);
 
 		const port = parseInt(process.env.PORT || '3000', 10);
 		const httpServer = app.listen(port, () => {
@@ -54,7 +57,6 @@ function setupSignalHandlers(cleanup: () => Promise<void>): void {
 		});
 
 		setupSignalHandlers(async () => {
-			await server.close();
 			httpServer.close();
 		});
 	} else {
