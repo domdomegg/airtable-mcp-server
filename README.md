@@ -29,7 +29,7 @@ Keep the token handy, you'll need it in the next step. It should look something 
 
 #### (Advanced) Alternative: Via manual .mcpb installation
 
-1. Find the latest mcpb build in [the GitHub Actions history](https://github.com/domdomegg/airtable-mcp-server/actions/workflows/mcpb.yaml?query=branch%3Amaster) (the top one)
+1. Find the latest mcpb build in [the GitHub Actions history](https://github.com/domdomegg/airtable-mcp-server/actions/workflows/ci.yaml?query=branch%3Amaster) (the top one)
 2. In the 'Artifacts' section, download the `airtable-mcp-server-mcpb` file
 3. Rename the `.zip` file to `.mcpb`
 4. Double-click the `.mcpb` file to open with Claude Desktop
