@@ -347,6 +347,75 @@ describe('AirtableMCPServer', () => {
 			});
 		});
 
+		test('handles update_field tool call with name and description', async () => {
+			await sendRequest({
+				jsonrpc: '2.0',
+				id: '1',
+				method: 'tools/call',
+				params: {
+					name: 'update_field',
+					arguments: {
+						baseId: 'base1',
+						tableId: 'tbl1',
+						fieldId: 'fld1',
+						name: 'Renamed',
+						description: 'Updated description',
+					},
+				},
+			});
+
+			expect(mockAirtableService.updateField).toHaveBeenCalledWith(
+				'base1',
+				'tbl1',
+				'fld1',
+				{
+					name: 'Renamed',
+					description: 'Updated description',
+					options: undefined,
+				},
+			);
+		});
+
+		test('handles update_field tool call with options.choices for select fields', async () => {
+			await sendRequest({
+				jsonrpc: '2.0',
+				id: '1',
+				method: 'tools/call',
+				params: {
+					name: 'update_field',
+					arguments: {
+						baseId: 'base1',
+						tableId: 'tbl1',
+						fieldId: 'fld1',
+						options: {
+							choices: [
+								{id: 'sel1', name: 'Todo', color: 'grayLight2'},
+								{name: 'In progress', color: 'yellowLight2'},
+								{id: 'sel2', name: 'Done', color: 'greenLight2'},
+							],
+						},
+					},
+				},
+			});
+
+			expect(mockAirtableService.updateField).toHaveBeenCalledWith(
+				'base1',
+				'tbl1',
+				'fld1',
+				{
+					name: undefined,
+					description: undefined,
+					options: {
+						choices: [
+							{id: 'sel1', name: 'Todo', color: 'grayLight2'},
+							{name: 'In progress', color: 'yellowLight2'},
+							{id: 'sel2', name: 'Done', color: 'greenLight2'},
+						],
+					},
+				},
+			);
+		});
+
 		test('handles list_comments tool call with pagination', async () => {
 			const response = await sendRequest({
 				jsonrpc: '2.0',

@@ -404,6 +404,78 @@ describe('AirtableService', () => {
 			});
 		});
 
+		describe('field operations', () => {
+			const mockBaseId = 'base123';
+			const mockTableId = 'table123';
+			const mockFieldId = 'fld123';
+
+			test('updates a field name and description', async () => {
+				const mockField = {
+					id: mockFieldId,
+					name: 'Status',
+					description: 'Workflow status',
+					type: 'singleLineText',
+				};
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					text: async () => Promise.resolve(JSON.stringify(mockField)),
+				});
+
+				const result = await service.updateField(mockBaseId, mockTableId, mockFieldId, {
+					name: 'Status',
+					description: 'Workflow status',
+				});
+
+				expect(mockFetch).toHaveBeenCalledWith(
+					`${mockBaseUrl}/v0/meta/bases/${mockBaseId}/tables/${mockTableId}/fields/${mockFieldId}`,
+					expect.objectContaining({
+						method: 'PATCH',
+						body: JSON.stringify({name: 'Status', description: 'Workflow status'}),
+					}),
+				);
+				expect(result).toEqual(mockField);
+			});
+
+			test('forwards options.choices for singleSelect / multipleSelects fields', async () => {
+				const mockField = {
+					id: mockFieldId,
+					name: 'Status',
+					type: 'singleSelect',
+					options: {
+						choices: [
+							{id: 'sel1', name: 'Todo', color: 'grayLight2'},
+							{id: 'sel2', name: 'In progress', color: 'yellowLight2'},
+							{name: 'Done', color: 'greenLight2'},
+						],
+					},
+				};
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					text: async () => Promise.resolve(JSON.stringify(mockField)),
+				});
+
+				const updates = {
+					options: {
+						choices: [
+							{id: 'sel1', name: 'Todo', color: 'grayLight2'},
+							{id: 'sel2', name: 'In progress', color: 'yellowLight2'},
+							{name: 'Done', color: 'greenLight2'},
+						],
+					},
+				};
+				const result = await service.updateField(mockBaseId, mockTableId, mockFieldId, updates);
+
+				expect(mockFetch).toHaveBeenCalledWith(
+					`${mockBaseUrl}/v0/meta/bases/${mockBaseId}/tables/${mockTableId}/fields/${mockFieldId}`,
+					expect.objectContaining({
+						method: 'PATCH',
+						body: JSON.stringify(updates),
+					}),
+				);
+				expect(result).toEqual(mockField);
+			});
+		});
+
 		describe('comment operations', () => {
 			const mockBaseId = 'base123';
 			const mockTableId = 'table123';

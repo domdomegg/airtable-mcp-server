@@ -184,7 +184,13 @@ export class AirtableService implements IAirtableService {
 		baseId: string,
 		tableId: string,
 		fieldId: string,
-		updates: {name?: string; description?: string},
+		updates: {
+			name?: string;
+			description?: string;
+			options?: {
+				choices?: {id?: string; name: string; color?: string}[];
+			};
+		},
 	): Promise<Field> {
 		return this.fetchFromAPI(
 			`/v0/meta/bases/${baseId}/tables/${tableId}/fields/${fieldId}`,

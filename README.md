@@ -212,13 +212,18 @@ Create either a global (`~/.cursor/mcp.json`) or project-specific (`.cursor/mcp.
     - `options` (object, optional): Field-specific options
 
 - **update_field**
-  - Updates a field's name or description
+  - Updates a field's name, description, or type-specific options (e.g. choices on singleSelect / multipleSelects)
   - Input parameters:
     - `baseId` (string, required): The ID of the Airtable base
     - `tableId` (string, required): The ID of the table
     - `fieldId` (string, required): The ID of the field
     - `name` (string, optional): New name for the field
     - `description` (string, optional): New description for the field
+    - `options` (object, optional): Field type-specific options
+      - `choices` (array, optional): For singleSelect / multipleSelects fields. Pass the full desired set of choices — existing choices that are omitted will be deleted. Each choice has:
+        - `id` (string, optional): The ID of an existing choice. Include to retain or rename/recolor it; omit when creating a new choice
+        - `name` (string, required): The display name of the choice
+        - `color` (string, optional): The color of the choice (e.g. `"blueLight2"`, `"greenBright"`)
 
 - **create_comment**
   - Creates a comment on a record

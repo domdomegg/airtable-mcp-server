@@ -582,7 +582,7 @@ export type IAirtableService = {
 	createTable(baseId: string, name: string, fields: Field[], description?: string): Promise<Table>;
 	updateTable(baseId: string, tableId: string, updates: {name?: string | undefined; description?: string | undefined}): Promise<Table>;
 	createField(baseId: string, tableId: string, field: Field): Promise<Field & {id: string}>;
-	updateField(baseId: string, tableId: string, fieldId: string, updates: {name?: string | undefined; description?: string | undefined}): Promise<Field & {id: string}>;
+	updateField(baseId: string, tableId: string, fieldId: string, updates: {name?: string | undefined; description?: string | undefined; options?: {choices?: {id?: string; name: string; color?: string}[] | undefined} | undefined}): Promise<Field & {id: string}>;
 	searchRecords(baseId: string, tableId: string, searchTerm: string, fieldIds?: string[], maxRecords?: number, view?: string): Promise<AirtableRecord[]>;
 	createComment(baseId: string, tableId: string, recordId: string, text: string, parentCommentId?: string): Promise<Comment>;
 	listComments(baseId: string, tableId: string, recordId: string, pageSize?: number, offset?: string): Promise<ListCommentsResponse>;
