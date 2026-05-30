@@ -81,6 +81,13 @@ export class AirtableService implements IAirtableService {
 				});
 			}
 
+			// Add fields parameter if provided
+			if (options.fields && options.fields.length > 0) {
+				options.fields.forEach((field) => {
+					queryParams.append('fields[]', field);
+				});
+			}
+
 			// eslint-disable-next-line no-await-in-loop
 			const response = await this.fetchFromAPI(
 				`/v0/${baseId}/${tableId}?${queryParams.toString()}`,

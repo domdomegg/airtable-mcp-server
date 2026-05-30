@@ -404,6 +404,7 @@ export const ListRecordsArgsSchema = z.object({
 	view: z.string().optional().describe('View name or ID to use for filtering and sorting records. If provided, the view\'s filters and sorts will be applied.'),
 	maxRecords: z.number().optional().describe('Maximum number of records to return. Defaults to 100.'),
 	filterByFormula: z.string().optional().describe('Airtable formula to filter records'),
+	fields: z.array(z.string()).optional().describe('An array of field names or IDs to include in the response'),
 	sort: z.array(z.object({
 		field: z.string().describe('Field name to sort by'),
 		direction: z.enum(['asc', 'desc']).optional().describe('Sort direction. Defaults to asc (ascending)'),
@@ -569,6 +570,7 @@ export type ListRecordsOptions = {
 	maxRecords?: z.infer<typeof ListRecordsArgsSchema.shape.maxRecords>;
 	filterByFormula?: z.infer<typeof ListRecordsArgsSchema.shape.filterByFormula>;
 	sort?: z.infer<typeof ListRecordsArgsSchema.shape.sort>;
+	fields?: z.infer<typeof ListRecordsArgsSchema.shape.fields>;
 };
 
 export type IAirtableService = {
