@@ -52,7 +52,7 @@ Keep the token handy, you'll need it in the next step. It should look something 
         "airtable-mcp-server"
       ],
       "env": {
-        "AIRTABLE_API_KEY": "pat123.abc123",
+        "AIRTABLE_API_KEY": "pat123.abc123"
       }
     }
   }
