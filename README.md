@@ -6,7 +6,7 @@ https://github.com/user-attachments/assets/c8285e76-d0ed-4018-94c7-20535db6c944
 
 ## Installation
 
-Follow the up-to-date instructions on [install-mcp](https://adamjones.me/install-mcp/?config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsImFpcnRhYmxlLW1jcC1zZXJ2ZXIiXSwibmFtZSI6ImFpcnRhYmxlIiwiZW52Ijp7IkFJUlRBQkxFX0FQSV9LRVkiOiJwYXQxMjMuYWJjMTIzIn19), which generates the right config for your MCP client (Claude Code, Claude Desktop, Cursor, Cline, VS Code, and more).
+Follow the instructions on [install-mcp](https://adamjones.me/install-mcp/?config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsImFpcnRhYmxlLW1jcC1zZXJ2ZXIiXSwibmFtZSI6ImFpcnRhYmxlIiwiZW52Ijp7IkFJUlRBQkxFX0FQSV9LRVkiOiJwYXQxMjMuYWJjMTIzIn19), which generates the right config for your MCP client (Claude Code, Claude Desktop, Cursor, Cline, VS Code, and more).
 
 You'll need an Airtable personal access token — [create one here](https://airtable.com/create/tokens/new) with scopes `schema.bases:read` and `data.records:read` (and optionally `schema.bases:write`, `data.records:write`, `data.recordComments:read`, `data.recordComments:write`), and access to the bases you want to use. It looks something like `pat123.abc123` (but longer). Set it as `AIRTABLE_API_KEY` (replacing the placeholder in the generated config).
 
