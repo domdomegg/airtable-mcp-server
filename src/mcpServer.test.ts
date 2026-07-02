@@ -1,3 +1,5 @@
+import {readFileSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
 import {
 	describe, test, expect, vi, beforeEach, afterEach,
 } from 'vitest';
@@ -128,6 +130,23 @@ describe('AirtableMCPServer', () => {
 	});
 
 	describe('server functionality', () => {
+		test('reports the package.json version, not a hardcoded literal', async () => {
+			const response = await sendRequest({
+				jsonrpc: '2.0',
+				id: '1',
+				method: 'initialize',
+				params: {
+					protocolVersion: '2024-11-05',
+					capabilities: {},
+					clientInfo: {name: 'test', version: '0.0.0'},
+				},
+			});
+
+			const {version: pkgVersion} = JSON.parse(readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8')) as {version: string};
+
+			expect((response.result.serverInfo as {version: string}).version).toBe(pkgVersion);
+		});
+
 		test('handles list_tools request', async () => {
 			const response = await sendRequest({
 				jsonrpc: '2.0',
@@ -144,6 +163,22 @@ describe('AirtableMCPServer', () => {
 					type: 'object',
 				}),
 			});
+		});
+
+		test('manifest.json lists exactly the registered tools', async () => {
+			const response = await sendRequest({
+				jsonrpc: '2.0',
+				id: '1',
+				method: 'tools/list',
+				params: {},
+			});
+
+			const registered = (response.result.tools as Tool[]).map((t) => t.name).sort();
+
+			const manifest = JSON.parse(readFileSync(fileURLToPath(new URL('../manifest.json', import.meta.url)), 'utf8')) as {tools: {name: string}[]};
+			const listed = manifest.tools.map((t) => t.name).sort();
+
+			expect(listed).toEqual(registered);
 		});
 
 		test('handles list_records tool call', async () => {
