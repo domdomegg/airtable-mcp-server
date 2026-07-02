@@ -82,6 +82,18 @@
     {
       "name": "update_field",
       "description": "Update a field's name or description"
+    },
+    {
+      "name": "create_comment",
+      "description": "Create a comment on a record"
+    },
+    {
+      "name": "list_comments",
+      "description": "List comments on a record"
+    },
+    {
+      "name": "upload_attachment",
+      "description": "Upload a file directly to an attachment field on an existing record using Airtable's upload API"
     }
   ],
   "compatibility": {
