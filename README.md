@@ -144,7 +144,25 @@ The server can also run in HTTP mode for use with remote MCP clients:
 MCP_TRANSPORT=http PORT=3000 npx airtable-mcp-server
 ```
 
-This starts a stateless HTTP server at `http://localhost:3000/mcp`. Note: HTTP transport has no built-in authentication - only use behind a reverse proxy or in a secured environment.
+This starts a stateless HTTP server at `http://localhost:3000/mcp`.
+
+> [!WARNING]
+> The HTTP transport has no built-in authentication, and binding to
+> localhost or a private network is **not** a security boundary against
+> browsers: a malicious website can use [DNS rebinding](https://en.wikipedia.org/wiki/DNS_rebinding)
+> to make a visitor's browser send requests to `http://localhost:3000/mcp`
+> and invoke tools — including reading, writing and deleting records —
+> using this server's Airtable token.
+>
+> Only run HTTP mode where untrusted callers (including browsers on the
+> same machine or network) cannot reach `/mcp` without authenticating.
+> In practice that means putting it behind a reverse proxy or gateway
+> that requires a credential a browser won't attach cross-origin, such
+> as an `Authorization` header.
+>
+> If you just want to use this server with an MCP client on the same
+> machine, use the default stdio transport instead — it doesn't open a
+> port at all.
 
 ## Contributing
 
