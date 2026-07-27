@@ -26,6 +26,7 @@ export function registerListRecords(server: McpServer, ctx: ToolContext): void {
 					field: z.string(),
 					direction: z.enum(['asc', 'desc']).optional(),
 				})).optional().describe('A list of sort objects that specifies how the records will be ordered'),
+				fields: z.array(z.string()).optional().describe('An array of field names or IDs to include in the response. Omit this to return all fields, which is usually what you want. Only set it if the table has many fields and you don\'t need most of them, AND you already know the exact field names or IDs (e.g. from describe_table) - guessing them will silently return the wrong data.'),
 			},
 			outputSchema,
 			annotations: {
@@ -41,6 +42,7 @@ export function registerListRecords(server: McpServer, ctx: ToolContext): void {
 					maxRecords: args.maxRecords,
 					filterByFormula: args.filterByFormula,
 					sort: args.sort,
+					fields: args.fields,
 				},
 			);
 			return jsonResult(outputSchema.parse({records}));
