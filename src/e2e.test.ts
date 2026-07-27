@@ -344,6 +344,30 @@ describe.each([
 			}
 		}, 30_000);
 
+		test('should only return the requested fields when listing records', async () => {
+			const result = await client.sendRequest<CallToolResult>({
+				jsonrpc: '2.0',
+				id: '1',
+				method: 'tools/call',
+				params: {
+					name: 'list_records',
+					arguments: {
+						baseId: 'appTc3EH4VcwliOCf',
+						tableId: 'tblya8yQZYB9HXrk6',
+						maxRecords: 3,
+						// 'Patient Name' by name, 'Age' by field id
+						fields: ['Patient Name', 'fldozKLQ9qhG3FgIB'],
+					},
+				},
+			});
+
+			const {records} = JSON.parse(result.content[0]!.text as string);
+			expect(records.length).toBeGreaterThan(0);
+			for (const record of records) {
+				expect(Object.keys(record.fields).sort()).toEqual(['Age', 'Patient Name']);
+			}
+		}, 30_000);
+
 		test('should list comments on a record', async () => {
 			const result = await client.sendRequest<CallToolResult>({
 				jsonrpc: '2.0',
