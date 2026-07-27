@@ -20,7 +20,7 @@ import {AirtableService} from './airtableService.js';
 
 // Deliberately committed readonly PAT, scoped to a single dummy table on a personal
 // Airtable account with only public test data. Not a leaked secret.
-const AIRTABLE_API_KEY = 'patDAZ0YDQu7LqGSy.f4736bbdec6ea0cb8ba8b5dba80c53f8b80e46d78a046a1769e749596671e677';
+const AIRTABLE_API_KEY = 'patOWFAxS6Qlz0koq.6b66b81180a54b007ddc96af1d59ef97f3402c81d02b5d32cfbd59e98d773f31';
 
 type MCPClient = {
 	sendRequest: <T>(message: JSONRPCRequest) => Promise<T>;
@@ -352,7 +352,7 @@ describe.each([
 				params: {
 					name: 'list_comments',
 					arguments: {
-						baseId: 'appC81gYOrDE9H6jc',
+						baseId: 'appTc3EH4VcwliOCf',
 						tableId: 'tblya8yQZYB9HXrk6',
 						recordId: 'reciVGWpUyMQ6vX8o',
 					},
