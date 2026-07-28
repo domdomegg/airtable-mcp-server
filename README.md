@@ -1,5 +1,7 @@
 # airtable-mcp-server
 
+[![MCP Toplist](https://mcptoplist.com/badge/io.github.domdomegg%2Fairtable-mcp-server.svg)](https://mcptoplist.com/server/io.github.domdomegg%2Fairtable-mcp-server)
+
 A Model Context Protocol server that provides read and write access to Airtable databases. This server enables LLMs to inspect database schemas, then read and write records.
 
 https://github.com/user-attachments/assets/c8285e76-d0ed-4018-94c7-20535db6c944
