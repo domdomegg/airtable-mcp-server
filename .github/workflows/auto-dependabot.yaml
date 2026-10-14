@@ -30,7 +30,16 @@ jobs:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Enable auto-merge
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'do not merge') }}
-        run: gh pr merge --auto --squash "$PR_URL"
+        # --auto fails if the PR is already mergeable ("unstable status"), and a
+        # direct merge can race with other merges ("Base branch was modified"),
+        # so fall back to a direct merge and retry a few times
+        run: |
+          for i in 1 2 3; do
+            gh pr merge --auto --squash "$PR_URL" && exit 0
+            gh pr merge --squash "$PR_URL" && exit 0
+            sleep 15
+          done
+          exit 1
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
