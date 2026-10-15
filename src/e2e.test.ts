@@ -177,10 +177,11 @@ describe.each([
 	{
 		name: 'Docker Container',
 		condition: process.env.RUN_DOCKER_TEST,
-		async createClient(): Promise<MCPClient> {
-			// Build Docker image
+		async setup() {
+			// Build Docker image once, outside the per-test hook timeout
 			execSync('docker build -t airtable-mcp-server:test .', {stdio: 'inherit'});
-
+		},
+		async createClient(): Promise<MCPClient> {
 			// Start the MCP server in a Docker container
 			const serverProcess = spawn('docker', [
 				'run',
@@ -196,9 +197,18 @@ describe.each([
 			return createProcessBasedClient(serverProcess);
 		},
 	},
-])('MCP Server Tests - $name', ({name, condition, createClient}) => {
+] as {
+	name: string;
+	condition: unknown;
+	setup?: () => Promise<void>;
+	createClient: () => Promise<MCPClient>;
+}[])('MCP Server Tests - $name', ({name, condition, setup, createClient}) => {
 	(condition ? describe : describe.skip)(`${name} Integration`, () => {
 		let client: MCPClient;
+
+		beforeAll(async () => {
+			await setup?.();
+		}, 300_000);
 
 		beforeEach(async () => {
 			client = await createClient();
