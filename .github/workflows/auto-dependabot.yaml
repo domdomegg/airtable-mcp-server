@@ -24,7 +24,13 @@ jobs:
     if: ${{ github.actor == 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository}}
     steps:
       - name: Approve
-        run: gh pr review --approve "$PR_URL"
+        # Retry to survive transient GitHub API errors (e.g. 502 Bad Gateway)
+        run: |
+          for i in 1 2 3 4 5; do
+            gh pr review --approve "$PR_URL" && exit 0
+            sleep 15
+          done
+          exit 1
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
